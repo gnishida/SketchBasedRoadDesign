@@ -157,6 +157,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyGraphicsView.cpp" />
     <ClCompile Include="MyMainWindow.cpp" />
+    <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="MyMainWindow.h">
@@ -202,6 +203,7 @@
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_MyMainWindow.h" />
     <ClInclude Include="Line.h" />
+    <ClInclude Include="Util.h" />
     <CustomBuild Include="MyGraphicsView.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing MyGraphicsView.h...</Message>

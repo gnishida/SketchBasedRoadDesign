@@ -16,6 +16,9 @@ public:
 	MyGraphicsView(QWidget* parent = 0);
 	~MyGraphicsView();
 
+public:
+	void simplify(Line* newLine);
+
 signals:
 
 public slots:

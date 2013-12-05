@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <qvector2d.h>
 #include <qgraphicsitem.h>
 #include <qpainter.h>
 #include <boost/geometry.hpp>
@@ -12,7 +13,8 @@ typedef boost::geometry::model::d2::point_xy<double> point;
 class Line : public QGraphicsItem {
 public:
 	//std::vector<QPointF> points;
-	boost::geometry::model::linestring<point> points;
+	//boost::geometry::model::linestring<point> points;
+	std::vector<QVector2D> points;
 
 public:
 	Line();

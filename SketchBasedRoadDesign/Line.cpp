@@ -40,9 +40,17 @@ void Line::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 }
 
 void Line::simplify() {
+	boost::geometry::model::linestring<point> points2;
+	for (int i = 0; i < points.size(); i++) {
+		points2.push_back(point(points[i].x(), points[i].y()));
+	}
+
     // Simplify it, using distance of 0.5 units
     boost::geometry::model::linestring<point> simplified;
-    boost::geometry::simplify(points, simplified, 2);
+    boost::geometry::simplify(points2, simplified, 2);
 
-	points = simplified;
+	points.clear();
+	for (int i = 0; i < simplified.size(); i++) {
+		points.push_back(QVector2D(simplified[i].x(), simplified[i].y()));
+	}
 }
