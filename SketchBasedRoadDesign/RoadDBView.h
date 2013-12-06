@@ -4,9 +4,9 @@
 #include <qgraphicsview.h>
 
 class RoadDBView : public QGraphicsView {
-private:
+public:
 	QGraphicsScene* scene;
-	QGraphicsSimpleTextItem* score;
+	//QGraphicsSimpleTextItem* score;
 	RoadGraph* roads;
 
 public:
@@ -14,6 +14,7 @@ public:
 	~RoadDBView();
 
 	void load(const char* filename);
-	void showDissimilarity(RoadGraph* roads);
+	float showSimilarity(RoadGraph* roads);
+	void updateView();
 };
 

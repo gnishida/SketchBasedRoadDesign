@@ -3,6 +3,7 @@
 #include "RoadGraph.h"
 #include "RoadDBView.h"
 #include <qfiledialog.h>
+#include <limits>
 
 ControlWidget::ControlWidget(MyMainWindow* parent) : QDockWidget("Control", (QWidget*)parent) {
 	this->parent = parent;
@@ -19,11 +20,20 @@ ControlWidget::~ControlWidget() {
 }
 
 void ControlWidget::search() {
-	RoadGraph* roads = parent->view->buildRoads();
+	RoadGraph* roads = parent->view->sketchToRoads();
+
+	float min_similarity = std::numeric_limits<float>::max();
+	RoadDBView* min_view;
 
 	for (int i = 0; i < parent->examples.size(); i++) {
-		parent->examples[i]->showDissimilarity(roads);
+		float similarity = parent->examples[i]->showSimilarity(roads);
+		if (similarity < min_similarity) {
+			min_similarity = similarity;
+			min_view = parent->examples[i];
+		}
 	}
+
+	parent->view->setReferene(min_view->roads);
 
 	delete roads;
 }
@@ -35,7 +45,7 @@ void ControlWidget::save() {
 	QString filename = QFileDialog::getSaveFileName(this, tr("Save road network ..."), QString(), tr("GSM Files (*.gsm)"));
 	if (filename != QString::null && !filename.isEmpty()) {
 		FILE* fp = fopen(filename.toUtf8().data(), "wb");
-		RoadGraph* roads = parent->view->buildRoads();
+		RoadGraph* roads = parent->view->sketchToRoads();
 		roads->save(fp);
 		fclose(fp);
 

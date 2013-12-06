@@ -62,6 +62,7 @@ void BFSTree::buildForest() {
 			RoadVertexDesc child = nodes[i];
 
 			if (visitedVertex.contains(child)) { // 訪問済みの場合
+				/*
 				RoadEdgeDesc orig_e_desc = GraphUtil::getEdge(roads, parent, child);
 
 				// もともとのエッジを無効にする
@@ -75,6 +76,9 @@ void BFSTree::buildForest() {
 				RoadEdgeDesc e_desc = GraphUtil::addEdge(roads, parent, child2, roads->graph[orig_e_desc]);
 
 				children.push_back(child2);
+				*/
+
+				children.push_back(child);
 			} else { // 未訪問の場合
 				visitedVertex[child] = true;
 

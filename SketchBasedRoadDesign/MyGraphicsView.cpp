@@ -8,24 +8,29 @@ MyGraphicsView::MyGraphicsView(QWidget *parent) : QGraphicsView(parent) {
 	this->setSceneRect(0, 0, 800, 600);
 	this->setScene(scene);
 
-	setRenderHint( QPainter::Antialiasing );
+	setRenderHint(QPainter::Antialiasing);
+
+	roads = NULL;
 }
 
 MyGraphicsView::~MyGraphicsView() {
 }
 
-void MyGraphicsView::updateRoads() {
-
-}
-
 /**
  * スケッチを元に、道路網を生成する。
  */
-RoadGraph* MyGraphicsView::buildRoads() {
-	RoadGraph* roads = new RoadGraph();
+RoadGraph* MyGraphicsView::sketchToRoads() {
+	if (roads != NULL) delete roads;
+
+	roads = new RoadGraph();
 
 	for (int i = 0; i < scene->items().size(); i++) {
-		Line* line = (Line*)scene->items()[i];
+		Line* line;
+		try {
+			line = (Line*)scene->items()[i];
+		} catch (const char* ex) {
+		}
+
 		if (line->points.size() < 2) continue;
 
 		RoadVertex* v1 = new RoadVertex(line->points[0]);
@@ -42,11 +47,21 @@ RoadGraph* MyGraphicsView::buildRoads() {
 
 	GraphUtil::planarify(roads);
 	GraphUtil::clean(roads);
-	GraphUtil::simplify(roads, 100.0f);
+	GraphUtil::simplify(roads, 20.0f);
 	GraphUtil::clean(roads);
 
-
 	// 作成された道路網に基づいて、スケッチを更新する
+	roadsToSketch();
+
+	update();
+
+	return roads;
+}
+
+/**
+ * 道路網データから、スケッチデータを生成する。
+ */
+void MyGraphicsView::roadsToSketch() {
 	scene->clear();
 	RoadEdgeIter ei, eend;
 	for (boost::tie(ei, eend) = edges(roads->graph); ei != eend; ++ei) {
@@ -60,9 +75,15 @@ RoadGraph* MyGraphicsView::buildRoads() {
 		scene->addItem(line);
 	}
 
-	update();
+	// 中心頂点を求め、大きい四角で表示
+	RoadVertexDesc v1 = GraphUtil::getCentralVertex(roads);
+	scene->addRect(roads->graph[v1]->pt.x() - 3, roads->graph[v1]->pt.y() - 3, 6, 6, QPen(Qt::blue));
+}
 
-	return roads;
+/**
+ * ＤＢから参照となる道路をセットする。
+ */
+void MyGraphicsView::setReferene(RoadGraph* ref_roads) {
 }
 
 void MyGraphicsView::mousePressEvent(QMouseEvent* e) {
@@ -82,8 +103,6 @@ void MyGraphicsView::mousePressEvent(QMouseEvent* e) {
 void MyGraphicsView::mouseReleaseEvent(QMouseEvent* e) {
 	if (currentLine != NULL) {
 		currentLine->simplify();
-
-		//RoadGraph* roads = buildRoads();
 	}
 
 	scene->update();

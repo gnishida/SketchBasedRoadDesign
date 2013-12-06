@@ -12,14 +12,16 @@ Q_OBJECT
 private:
 	QGraphicsScene* scene;
 	Line* currentLine;
+	RoadGraph* roads;
 
 public:
 	MyGraphicsView(QWidget* parent = 0);
 	~MyGraphicsView();
 
 public:
-	void updateRoads();
-	RoadGraph* buildRoads();
+	RoadGraph* sketchToRoads();
+	void roadsToSketch();
+	void setReferene(RoadGraph* ref_roads);
 
 signals:
 
@@ -28,6 +30,6 @@ public slots:
 	void mouseReleaseEvent(QMouseEvent* e);
 	void mouseMoveEvent(QMouseEvent* e);
 
-public:
+private:
 };
 
