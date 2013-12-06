@@ -1,6 +1,8 @@
-#include "RoadDBView.h"
+﻿#include "RoadDBView.h"
 #include "Line.h"
 #include "GraphUtil.h"
+#include "BFSTree.h"
+#include <qmap.h>
 
 RoadDBView::RoadDBView(QWidget *parent) : QGraphicsView(parent) {
 	scene = new QGraphicsScene();
@@ -14,6 +16,9 @@ RoadDBView::RoadDBView(QWidget *parent) : QGraphicsView(parent) {
 	setRenderHint(QPainter::Antialiasing);
 
 	roads = NULL;
+	score = scene->addSimpleText("test", QFont("Times", 1400));
+	score->setPen(QPen(Qt::blue));
+	score->setPos(-5000, -5000);
 }
 
 RoadDBView::~RoadDBView() {
@@ -43,6 +48,29 @@ void RoadDBView::load(const char* filename) {
 	scene->update();
 }
 
-void RoadDBView::showDissimilarity(RoadGraph* roads) {
-	//GraphUtil::computeDissimilarity2();
+void RoadDBView::showDissimilarity(RoadGraph* roads2) {
+	// 各道路網のImportanceを計算する
+	GraphUtil::computeImportanceOfEdges(roads, 1.0f, 1.0f, 1.0f);
+	GraphUtil::computeImportanceOfEdges(roads2, 1.0f, 1.0f, 1.0f);
+
+	// まず、それぞれの中心頂点を求める
+	RoadVertexDesc v1 = GraphUtil::getCentralVertex(roads);
+	RoadVertexDesc v2 = GraphUtil::getCentralVertex(roads2);
+
+	// 木構造を作成
+	BFSTree tree1(roads, v1);
+	BFSTree tree2(roads2, v2);
+
+	// マッチングを探す
+	QMap<RoadVertexDesc, RoadVertexDesc> map1;
+	QMap<RoadVertexDesc, RoadVertexDesc> map2;
+	GraphUtil::findCorrespondence(roads, &tree1, roads2, &tree2, false, map1, map2);
+
+	// 類似度を計算する
+	float similarity = GraphUtil::computeSimilarity(roads, map1, roads2, map2);
+	QString str;
+	str.setNum(similarity);
+	score->setText(str);
+
+	update();
 }

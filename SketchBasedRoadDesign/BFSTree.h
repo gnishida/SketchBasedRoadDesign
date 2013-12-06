@@ -4,10 +4,10 @@
 #include "RoadGraph.h"
 #include <vector>
 
-class BFSForest : public AbstractForest {
+class BFSTree : public AbstractForest {
 public:
-	BFSForest(RoadGraph* roads, QList<RoadVertexDesc> roots);
-	~BFSForest();
+	BFSTree(RoadGraph* roads, RoadVertexDesc root);
+	~BFSTree();
 	
 	void buildForest();
 };

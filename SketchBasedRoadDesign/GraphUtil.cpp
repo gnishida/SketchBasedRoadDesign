@@ -281,6 +281,14 @@ void GraphUtil::snapVertex(RoadGraph* roads, RoadVertexDesc v1, RoadVertexDesc v
 }
 
 /**
+ * 道路網の中心に最も近い頂点を返却する。
+ */
+RoadVertexDesc GraphUtil::getCentralVertex(RoadGraph* roads) {
+	BBox box = getAABoundingBox(roads);
+	return findNearestVertex(roads, box.midPt());
+}
+
+/**
  * index番目のエッジを返却する。
  */
 RoadEdgeDesc GraphUtil::getEdge(RoadGraph* roads, int index, bool onlyValidEdge) {
@@ -2497,6 +2505,44 @@ float GraphUtil::computeDissimilarity2(RoadGraph* roads1, QMap<RoadVertexDesc, R
 }
 
 /**
+ * ２つの道路網の類似度を計算して返却する。
+ */
+float GraphUtil::computeSimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadVertexDesc>& map1, RoadGraph* roads2, QMap<RoadVertexDesc, RoadVertexDesc>& map2) {
+	float score = 0.0f;
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// 道路網１の各エッジについて、対応エッジがある場合、スコアを追加
+	RoadEdgeIter ei, eend;
+	for (boost::tie(ei, eend) = boost::edges(roads1->graph); ei != eend; ++ei) {
+		if (!roads1->graph[*ei]->valid) continue;
+
+		RoadVertexDesc src = boost::source(*ei, roads1->graph);
+		RoadVertexDesc tgt = boost::target(*ei, roads1->graph);
+		
+		if (map1.contains(src) && map1.contains(tgt)) {
+			// 対応エッジがあるので、スコアを追加
+			score += roads1->graph[*ei]->importance;
+		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// 道路網２の各エッジについて、対応エッジがある場合、スコアを追加
+	for (boost::tie(ei, eend) = boost::edges(roads2->graph); ei != eend; ++ei) {
+		if (!roads2->graph[*ei]->valid) continue;
+
+		RoadVertexDesc src = boost::source(*ei, roads2->graph);
+		RoadVertexDesc tgt = boost::target(*ei, roads2->graph);
+		
+		if (map2.contains(src) && map2.contains(tgt)) {
+			// 対応エッジがあるので、スコアを追加
+			score += roads2->graph[*ei]->importance;
+		}
+	}
+
+	return score;
+}
+
+/**
  * NearestNeighborに基づいて、２つの道路網のマッチングを行う。
  */
 void GraphUtil::findCorrespondenceByNearestNeighbor(RoadGraph* roads1, RoadGraph* roads2, QMap<RoadVertexDesc, RoadVertexDesc>& map1, QMap<RoadVertexDesc, RoadVertexDesc>& map2) {
@@ -2626,6 +2672,145 @@ QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findCorrespondentEdges(RoadGraph
 	}
 
 	return map;
+}
+
+/**
+ * 道路網１と道路網２で、対応する頂点を探す。
+ */
+void GraphUtil::findCorrespondence(RoadGraph* roads1, AbstractForest* forest1, RoadGraph* roads2, AbstractForest* forest2, bool findAllMatching, QMap<RoadVertexDesc, RoadVertexDesc>& map1, QMap<RoadVertexDesc, RoadVertexDesc>& map2) {
+	std::list<RoadVertexDesc> seeds1;
+	std::list<RoadVertexDesc> seeds2;
+
+	// 各ルートエッジについて
+	for (int i = 0; i < forest1->getRoots().size(); i++) {
+		RoadVertexDesc v1 = forest1->getRoots()[i];
+		RoadVertexDesc v2 = forest2->getRoots()[i];
+
+		// ルート頂点をマッチングさせる
+		map1[v1] = v2;
+		map2[v2] = v1;
+
+		// ルート頂点を、シードに追加する
+		seeds1.push_back(v1);
+		seeds2.push_back(v2);
+	}
+
+	while (!seeds1.empty()) {
+		RoadVertexDesc parent1 = seeds1.front();
+		seeds1.pop_front();
+		RoadVertexDesc parent2 = seeds2.front();
+		seeds2.pop_front();
+
+		// どちらのノードにも、子ノードがない場合は、スキップ
+		if (forest1->getChildren(parent1).size() == 0 && forest2->getChildren(parent2).size() == 0) continue;
+
+		// 子リストを取得
+		std::vector<RoadVertexDesc> children1 = forest1->getChildren(parent1);
+		std::vector<RoadVertexDesc> children2 = forest2->getChildren(parent2);
+
+		// 子ノード同士のベストマッチングを取得
+		QMap<RoadVertexDesc, RoadVertexDesc> children_map = findCorrespondentEdges(roads1, parent1, children1, roads2, parent2, children2);
+		for (QMap<RoadVertexDesc, RoadVertexDesc>::iterator it = children_map.begin(); it != children_map.end(); ++it) {
+			RoadVertexDesc child1 = it.key();
+			RoadVertexDesc child2 = it.value();
+
+			// マッチングを更新
+			map1[child1] = child2;
+			map2[child2] = child1;
+
+			// fullyPairedフラグをtrueにする
+			roads1->graph[getEdge(roads1, parent1, child1)]->fullyPaired = true;
+			roads2->graph[getEdge(roads2, parent2, child2)]->fullyPaired = true;
+
+			seeds1.push_back(child1);
+			seeds2.push_back(child2);
+		}
+
+		if (!findAllMatching) continue;
+
+		// 残り者の子ノードのマッチングを探す
+		while (true) {
+			RoadVertexDesc child1, child2;
+			if (!forceMatching(roads1, parent1, forest1, map1, roads2, parent2, forest2, map2, child1, child2)) break;
+
+			// マッチングを更新
+			map1[child1] = child2;
+			map2[child2] = child1;
+
+			seeds1.push_back(child1);
+			seeds2.push_back(child2);
+		}
+	}
+}
+
+/**
+ * 相手のいない子ノードの中の１つに対して、対応する道路網の親ノードに無理やり対応させ、そのペアを返却する。
+ * 相手のいない子ノードが１つもない場合は、falseを返却する。
+ */
+bool GraphUtil::forceMatching(RoadGraph* roads1, RoadVertexDesc parent1, AbstractForest* forest1, QMap<RoadVertexDesc, RoadVertexDesc>& map1, RoadGraph* roads2, RoadVertexDesc parent2, AbstractForest* forest2, QMap<RoadVertexDesc, RoadVertexDesc>& map2, RoadVertexDesc& child1, RoadVertexDesc& child2) {
+	float min_angle = std::numeric_limits<float>::max();
+	int min_id1;
+	int min_id2;
+
+	// 子リストを取得
+	std::vector<RoadVertexDesc> children1 = forest1->getChildren(parent1);
+	std::vector<RoadVertexDesc> children2 = forest2->getChildren(parent2);
+
+	// ベストペアが見つからない、つまり、一方のリストが、全てペアになっている場合
+	for (int i = 0; i < children1.size(); i++) {
+		if (map1.contains(children1[i])) continue;
+		if (!roads1->graph[children1[i]]->valid) continue;
+
+		// 相手の親ノードをコピーしてマッチさせる
+		RoadVertex* v = new RoadVertex(roads2->graph[parent2]->getPt());
+		RoadVertexDesc v_desc = boost::add_vertex(roads2->graph);
+		roads2->graph[v_desc] = v;
+
+		RoadEdgeDesc e1_desc = GraphUtil::getEdge(roads1, parent1, children1[i]);
+
+		// 相手の親ノードと子ノードの間にエッジを作成する
+		//RoadEdgeDesc e2_desc = GraphUtil::addEdge(roads2, parent2, v_desc, roads1->graph[e1_desc]->lanes, roads1->graph[e1_desc]->type, roads1->graph[e1_desc]->oneWay);
+		RoadEdgeDesc e2_desc = GraphUtil::addEdge(roads2, parent2, v_desc, roads1->graph[e1_desc]);
+		roads2->graph[e2_desc]->polyLine.clear();
+		roads2->graph[e2_desc]->addPoint(roads2->graph[parent2]->pt);
+		roads2->graph[e2_desc]->addPoint(roads2->graph[v_desc]->pt);
+
+		forest2->addChild(parent2, v_desc);
+
+		child1 = children1[i];
+		child2 = v_desc;
+
+		return true;
+	}
+
+	for (int i = 0; i < children2.size(); i++) {
+		if (map2.contains(children2[i])) continue;
+		if (!roads2->graph[children2[i]]->valid) continue;
+
+		// 相手の親ノードをコピーしてマッチさせる
+		RoadVertex* v = new RoadVertex(roads1->graph[parent1]->getPt());
+		RoadVertexDesc v_desc = boost::add_vertex(roads1->graph);
+		roads1->graph[v_desc] = v;
+
+		RoadEdgeDesc e2_desc = GraphUtil::getEdge(roads2, parent2, children2[i]);
+
+		// 相手の親ノードと子ノードの間にエッジを作成する
+		//GraphUtil::addEdge(roads1, parent1, v_desc, roads2->graph[e2_desc]->lanes, roads2->graph[e2_desc]->type, roads2->graph[e2_desc]->oneWay);
+		RoadEdgeDesc e1_desc = GraphUtil::addEdge(roads1, parent1, v_desc, roads2->graph[e2_desc]);
+		roads1->graph[e1_desc]->polyLine.clear();
+		roads1->graph[e1_desc]->addPoint(roads1->graph[parent1]->pt);
+		roads1->graph[e1_desc]->addPoint(roads1->graph[v_desc]->pt);
+
+		forest1->addChild(parent1, v_desc);
+
+		child1 = v_desc;
+		child2 = children2[i];
+
+		return true;
+	}
+
+	// ペアなし、つまり、全ての子ノードがペアになっている
+	return false;
 }
 
 /**

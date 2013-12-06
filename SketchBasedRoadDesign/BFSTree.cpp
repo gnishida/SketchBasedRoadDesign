@@ -1,4 +1,4 @@
-﻿#include "BFSForest.h"
+﻿#include "BFSTree.h"
 #include "GraphUtil.h"
 
 /**
@@ -6,89 +6,33 @@
  * rootsには、２つの頂点を１ペアとして、頂点ペアが並んでいる。各ペアは、エッジに対応する。
  * つまり、roots.size()は、偶数であるはず。
  */
-BFSForest::BFSForest(RoadGraph* roads, QList<RoadVertexDesc> roots) : AbstractForest(roads) {
-	this->roots = roots;
+BFSTree::BFSTree(RoadGraph* roads, RoadVertexDesc root) : AbstractForest(roads) {
+	this->roots.push_back(root);
 
 	buildForest();
 }
 
-BFSForest::~BFSForest() {
+BFSTree::~BFSTree() {
 }
 
-void BFSForest::buildForest() {
+void BFSTree::buildForest() {
 	QList<RoadVertexDesc> seeds;
-	QList<int> groups;
 
 	QMap<RoadEdgeDesc, bool> visitedEdge;
 	QMap<RoadVertexDesc, bool> visitedVertex;
 
-	// ルートとして与えられた頂点について
-	for (int i = 0; i < roots.size() / 2; i++) {
-		RoadVertexDesc src = roots[i * 2];
-		RoadVertexDesc tgt = roots[i * 2 + 1];
+	RoadVertexDesc root = roots[0];
 
-		// エッジの取得
-		RoadEdgeDesc e_desc = GraphUtil::getEdge(roads, src, tgt);
+	// シードを登録する
+	seeds.push_back(root);
 
-		// エッジのグループ、seedフラグを設定
-		roads->graph[e_desc]->group = i;
-		roads->graph[e_desc]->seed = true;
-
-		// 頂点srcが既存のシードと重複している場合
-		if (seeds.contains(src)) {
-			// 頂点srcをコピーする
-			RoadVertex* v = new RoadVertex(roads->graph[src]->pt);
-			RoadVertexDesc new_src = boost::add_vertex(roads->graph);
-			roads->graph[new_src] = v;
-
-			// 古いエッジを削除
-			roads->graph[e_desc]->valid = false;
-
-			// 新しいエッジを追加
-			e_desc = GraphUtil::addEdge(roads, new_src, tgt, roads->graph[e_desc]);
-
-			src = new_src;
-		}
-
-		// 頂点tgtが既存のシードと重複している場合
-		if (seeds.contains(tgt)) {
-			// 頂点tgtをコピーする
-			RoadVertex* v = new RoadVertex(roads->graph[tgt]->pt);
-			RoadVertexDesc new_tgt = boost::add_vertex(roads->graph);
-			roads->graph[new_tgt] = v;
-
-			// 古いエッジを削除
-			roads->graph[e_desc]->valid = false;
-
-			// 新しいエッジを追加
-			e_desc = GraphUtil::addEdge(roads, src, new_tgt, roads->graph[e_desc]);
-
-			tgt = new_tgt;
-		}
-
-		// src、tgtが更新されたかも知れないので、おおもとのデータも更新しておく
-		roots[i * 2] = src;
-		roots[i * 2 + 1] = tgt;
-
-		// シードを登録する
-		seeds.push_back(src);
-		seeds.push_back(tgt);
-		groups.push_back(i);
-		groups.push_back(i);
-
-		// ルートエッジ・頂点を訪問済みとマークする
-		visitedEdge[e_desc] = true;
-		visitedVertex[src] = true;
-		visitedVertex[tgt] = true;
-	}
+	// ルート頂点を訪問済みとマークする
+	visitedVertex[root] = true;
 
 	// ルート頂点リストからスタートして、BFSで全頂点を訪問する
 	while (!seeds.empty()) {
 		RoadVertexDesc parent = seeds.front();
 		seeds.pop_front();
-
-		int group = groups.front();
-		groups.pop_front();
 
 		std::vector<RoadVertexDesc> children;
 
@@ -130,17 +74,13 @@ void BFSForest::buildForest() {
 				// エッジ作成
 				RoadEdgeDesc e_desc = GraphUtil::addEdge(roads, parent, child2, roads->graph[orig_e_desc]);
 
-				roads->graph[e_desc]->group = group;
-
 				children.push_back(child2);
 			} else { // 未訪問の場合
 				visitedVertex[child] = true;
-				roads->graph[edges[i]]->group = group;
 
 				children.push_back(child);
 
 				seeds.push_back(child);
-				groups.push_back(group);
 			}
 		}
 

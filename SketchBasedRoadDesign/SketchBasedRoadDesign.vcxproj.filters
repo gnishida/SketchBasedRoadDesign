@@ -101,6 +101,12 @@
     <ClCompile Include="RoadDBView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BFSTree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AbstractForest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="MyMainWindow.h">
@@ -160,6 +166,12 @@
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="RoadDBView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BFSTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractForest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

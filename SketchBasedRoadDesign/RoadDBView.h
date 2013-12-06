@@ -6,6 +6,7 @@
 class RoadDBView : public QGraphicsView {
 private:
 	QGraphicsScene* scene;
+	QGraphicsSimpleTextItem* score;
 	RoadGraph* roads;
 
 public:
