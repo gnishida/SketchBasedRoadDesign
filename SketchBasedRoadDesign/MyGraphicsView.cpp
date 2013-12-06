@@ -37,6 +37,8 @@ RoadGraph* MyGraphicsView::buildRoads() {
 	}
 
 	GraphUtil::planarify(roads);
+	GraphUtil::simplify(roads, 4.0f);
+	GraphUtil::clean(roads);
 
 	return roads;
 }

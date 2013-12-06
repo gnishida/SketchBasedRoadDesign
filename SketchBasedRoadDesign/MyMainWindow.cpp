@@ -17,12 +17,14 @@ MyMainWindow::MyMainWindow(QWidget *parent, Qt::WFlags flags) : QMainWindow(pare
 	sub_win->setLayout(db_layout);
 
 	// ３つの道路網サンプルのためのビューを追加する
+	const char* filename[3] = {"osm\\example1.gsm", "osm\\grid.gsm", "osm\\radial.gsm"};
 	for (int i = 0; i < 3; i++) {
 		RoadDBView* v = new RoadDBView(sub_win);
+		v->load(filename[i]);
 		examples.push_back(v);
 		db_layout->addWidget(examples[i]);
 	}
-
+	
 	layout->addWidget(view);
 	layout->addWidget(sub_win);
 
@@ -41,5 +43,5 @@ MyMainWindow::~MyMainWindow() {
 void MyMainWindow::showControlWidget() {
 	// DocWidgetの表示
 	controlWidget->show();
-	addDockWidget(Qt::RightDockWidgetArea, controlWidget);
+	addDockWidget(Qt::LeftDockWidgetArea, controlWidget);
 }

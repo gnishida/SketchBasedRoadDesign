@@ -19,5 +19,6 @@ public:
 public slots:
 	void search();
 	void accept();
+	void save();
 };
 

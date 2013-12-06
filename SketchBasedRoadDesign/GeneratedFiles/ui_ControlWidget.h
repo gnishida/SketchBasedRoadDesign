@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'ControlWidget.ui'
 **
-** Created: Thu Dec 5 19:05:14 2013
+** Created: Thu Dec 5 23:07:10 2013
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -29,6 +29,7 @@ public:
     QPushButton *pushButtonSearch;
     QPushButton *pushButtonOK;
     QSlider *horizontalSlider;
+    QPushButton *pushButtonSave;
 
     void setupUi(QDockWidget *ControlWidget)
     {
@@ -49,6 +50,9 @@ public:
         horizontalSlider->setObjectName(QString::fromUtf8("horizontalSlider"));
         horizontalSlider->setGeometry(QRect(10, 120, 131, 20));
         horizontalSlider->setOrientation(Qt::Horizontal);
+        pushButtonSave = new QPushButton(dockWidgetContents);
+        pushButtonSave->setObjectName(QString::fromUtf8("pushButtonSave"));
+        pushButtonSave->setGeometry(QRect(10, 200, 131, 31));
         ControlWidget->setWidget(dockWidgetContents);
 
         retranslateUi(ControlWidget);
@@ -60,6 +64,7 @@ public:
     {
         pushButtonSearch->setText(QApplication::translate("ControlWidget", "Search", 0, QApplication::UnicodeUTF8));
         pushButtonOK->setText(QApplication::translate("ControlWidget", "OK", 0, QApplication::UnicodeUTF8));
+        pushButtonSave->setText(QApplication::translate("ControlWidget", "Save", 0, QApplication::UnicodeUTF8));
         Q_UNUSED(ControlWidget);
     } // retranslateUi
 
