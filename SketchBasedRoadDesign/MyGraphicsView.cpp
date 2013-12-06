@@ -1,17 +1,12 @@
 ﻿#include "MyGraphicsView.h"
 #include "Util.h"
+#include "GraphUtil.h"
 #include <qvector2d.h>
 
 MyGraphicsView::MyGraphicsView(QWidget *parent) : QGraphicsView(parent) {
 	scene = new QGraphicsScene();
 	this->setSceneRect(0, 0, 800, 600);
 	this->setScene(scene);
-
-	/*
-	pathItem = scene->addPath(QPainterPath());
-	pathItem->setBrush(QColor(0, 0, 0));
-	pathItem->setPen(Qt::NoPen);
-	*/
 
 	setRenderHint( QPainter::Antialiasing );
 }
@@ -20,34 +15,30 @@ MyGraphicsView::~MyGraphicsView() {
 }
 
 /**
- * 新規追加したエッジによって、新たにできた交点をチェックし、交点でエッジを分割する。
- * さらに、近い交点同士を結合し、簡易化する。
+ * スケッチを元に、道路網を生成する。
  */
-void MyGraphicsView::simplify(Line* newLine) {
+RoadGraph* MyGraphicsView::buildRoads() {
+	RoadGraph* roads = new RoadGraph();
+
 	for (int i = 0; i < scene->items().size(); i++) {
-		if (scene->items()[i] == newLine) continue;
-
-
 		Line* line = (Line*)scene->items()[i];
-		for (int j = 0; j < line->points.size() - 1; j++) {
-			Line* newLine2 = new Line();
-			*newLine2 = *newLine;
+		if (line->points.size() < 2) continue;
 
-			for (int k = 0; k < newLine->points.size() - 1; k++) {
-				float tab, tcd;
-				QVector2D intPt;
-				if (Util::segmentSegmentIntersectXY(line->points[j], line->points[j + 1], newLine->points[k], newLine->points[k + 1], &tab, &tcd, true, intPt)) {
-					newLine2->points.push_back(newLine->points[k]);
-					newLine2->points.push_back(intPt);
-				} else {
-					newLine2->points.push_back(newLine->points[k]);
-				}
-			}
+		RoadVertex* v1 = new RoadVertex(line->points[0]);
+		RoadVertexDesc v1_desc = boost::add_vertex(roads->graph);
+		roads->graph[v1_desc] = v1;
 
-			*newLine = *newLine2;
-		}
+		RoadVertex* v2 = new RoadVertex(line->points[line->points.size() - 1]);
+		RoadVertexDesc v2_desc = boost::add_vertex(roads->graph);
+		roads->graph[v2_desc] = v2;
 
+		RoadEdgeDesc e_desc = GraphUtil::addEdge(roads, v1_desc, v2_desc, 2, 2, false);
+		roads->graph[e_desc]->polyLine = line->points;
 	}
+
+	GraphUtil::planarify(roads);
+
+	return roads;
 }
 
 void MyGraphicsView::mousePressEvent(QMouseEvent* e) {
@@ -57,7 +48,7 @@ void MyGraphicsView::mousePressEvent(QMouseEvent* e) {
 
 		QPointF pt = mapToScene(e->pos());
 
-		currentLine->points.push_back(point(pt.x(), pt.y()));
+		currentLine->points.push_back(QVector2D(pt.x(), pt.y()));
 	} else if (e->buttons() == Qt::RightButton) {
 	}
 
@@ -68,7 +59,7 @@ void MyGraphicsView::mouseReleaseEvent(QMouseEvent* e) {
 	if (currentLine != NULL) {
 		currentLine->simplify();
 
-		simplify(currentLine);
+		//RoadGraph* roads = buildRoads();
 	}
 
 	scene->update();
@@ -77,7 +68,7 @@ void MyGraphicsView::mouseReleaseEvent(QMouseEvent* e) {
 void MyGraphicsView::mouseMoveEvent(QMouseEvent* e) {
 	if (e->buttons() == Qt::LeftButton) {
 		QPointF pt = mapToScene(e->pos());
-		currentLine->points.push_back(point(pt.x(), pt.y()));
+		currentLine->points.push_back(QVector2D(pt.x(), pt.y()));
 	}
 
 	scene->update();

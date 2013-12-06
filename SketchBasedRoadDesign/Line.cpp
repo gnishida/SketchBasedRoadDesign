@@ -8,6 +8,11 @@ Line::Line() {
 Line::~Line() {
 }
 
+Line& Line::operator=(const Line& ref) {
+	points = ref.points;
+	return *this;
+}
+
 QRectF Line::boundingRect() const {
 	QRectF rect(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
 

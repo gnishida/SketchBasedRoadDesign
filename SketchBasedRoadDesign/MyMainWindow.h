@@ -3,8 +3,8 @@
 
 #include <QtGui/QMainWindow>
 #include "ui_MyMainWindow.h"
-//#include "Canvas.h"'
 #include "MyGraphicsView.h"
+#include "ControlWidget.h"
 #include <qscrollarea.h>
 
 class MyMainWindow : public QMainWindow
@@ -12,17 +12,17 @@ class MyMainWindow : public QMainWindow
 	Q_OBJECT
 
 public:
+	Ui::MyMainWindowClass ui;
 	QScrollArea* scrollArea;
-	//Canvas* canvas;
-	//QGraphicsView* view;
 	MyGraphicsView* view;
+	ControlWidget* controlWidget;
 
 public:
 	MyMainWindow(QWidget *parent = 0, Qt::WFlags flags = 0);
 	~MyMainWindow();
 
-private:
-	Ui::MyMainWindowClass ui;
+private slots:
+	void showControlWidget();
 };
 
 #endif // MYMAINWINDOW_H

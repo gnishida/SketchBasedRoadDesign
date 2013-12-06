@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Line.h"
+#include "RoadGraph.h"
 #include <qgraphicsview.h>
 #include <qgraphicsscene.h>
 #include <QMouseEvent>
@@ -17,7 +18,7 @@ public:
 	~MyGraphicsView();
 
 public:
-	void simplify(Line* newLine);
+	RoadGraph* buildRoads();
 
 signals:
 
