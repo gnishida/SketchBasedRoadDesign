@@ -171,6 +171,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyGraphicsView.cpp" />
     <ClCompile Include="MyMainWindow.cpp" />
+    <ClCompile Include="RoadDBView.cpp" />
     <ClCompile Include="RoadEdge.cpp" />
     <ClCompile Include="RoadGraph.cpp" />
     <ClCompile Include="RoadVertex.cpp" />
@@ -244,6 +245,7 @@
     <ClInclude Include="GeneratedFiles\ui_MyMainWindow.h" />
     <ClInclude Include="GraphUtil.h" />
     <ClInclude Include="Line.h" />
+    <ClInclude Include="RoadDBView.h" />
     <ClInclude Include="RoadEdge.h" />
     <ClInclude Include="RoadGraph.h" />
     <ClInclude Include="RoadVertex.h" />

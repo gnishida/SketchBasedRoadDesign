@@ -4,6 +4,7 @@
 #include <QtGui/QMainWindow>
 #include "ui_MyMainWindow.h"
 #include "MyGraphicsView.h"
+#include "RoadDBView.h"
 #include "ControlWidget.h"
 #include <qscrollarea.h>
 
@@ -15,6 +16,7 @@ public:
 	Ui::MyMainWindowClass ui;
 	QScrollArea* scrollArea;
 	MyGraphicsView* view;
+	std::vector<RoadDBView*> examples;
 	ControlWidget* controlWidget;
 
 public:

@@ -98,6 +98,9 @@
     <ClCompile Include="GeneratedFiles\Release\moc_ControlWidget.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
+    <ClCompile Include="RoadDBView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="MyMainWindow.h">
@@ -155,6 +158,9 @@
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_ControlWidget.h">
       <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RoadDBView.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
