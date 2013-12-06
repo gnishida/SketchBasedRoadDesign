@@ -42,8 +42,8 @@ RoadGraph* MyGraphicsView::buildRoads() {
 
 	GraphUtil::planarify(roads);
 	GraphUtil::clean(roads);
-	//GraphUtil::simplify(roads, 4.0f);
-	//GraphUtil::clean(roads);
+	GraphUtil::simplify(roads, 100.0f);
+	GraphUtil::clean(roads);
 
 
 	// 作成された道路網に基づいて、スケッチを更新する
