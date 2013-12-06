@@ -1477,6 +1477,18 @@ void GraphUtil::singlify(RoadGraph* roads) {
  * 道路網をplanarグラフにする。
  */
 void GraphUtil::planarify(RoadGraph* roads) {
+	bool split = true;
+
+	while (split) {
+		split = planarifyOne(roads);
+	}
+}
+
+/**
+ * 道路網の交差を、１つ修正し、trueを返却する。
+ * 交差が１つもない場合は、falseを返却する。
+ */
+bool GraphUtil::planarifyOne(RoadGraph* roads) {
 	RoadEdgeIter ei, eend;
 	for (boost::tie(ei, eend) = boost::edges(roads->graph); ei != eend; ++ei) {
 		RoadEdge* e = roads->graph[*ei];
@@ -1496,33 +1508,34 @@ void GraphUtil::planarify(RoadGraph* roads) {
 			//if ((src == src2 && tgt == tgt2) || (src == tgt2 && tgt == src2)) continue;
 			if (src == src2 || src == tgt2 || tgt == src2 || tgt == tgt2) continue;
 
-			for (int i = 0; i < e->getPolyLine().size() - 1; i++) {
-				for (int j = 0; j < e2->getPolyLine().size() - 1; j++) {
-					float tab, tcd;
-					QVector2D intPoint;
-					if (Util::segmentSegmentIntersectXY(e->getPolyLine()[i], e->getPolyLine()[i+1], e2->getPolyLine()[j], e2->getPolyLine()[j+1], &tab, &tcd, true, intPoint)) {
-						// 交点をノードとして登録
-						RoadVertex* new_v = new RoadVertex(intPoint);
-						RoadVertexDesc new_v_desc = boost::add_vertex(roads->graph);
-						roads->graph[new_v_desc] = new_v;
 
-						// もともとのエッジを無効にする
-						roads->graph[*ei]->valid = false;
-						roads->graph[*ei2]->valid = false;
+			float tab, tcd;
+			QVector2D intPt;
+			if (Util::segmentSegmentIntersectXY(roads->graph[src]->pt, roads->graph[tgt]->pt, roads->graph[src2]->pt, roads->graph[tgt2]->pt, &tab, &tcd, true, intPt)) {
+				if ((roads->graph[src]->pt - intPt).length() < 10 || (roads->graph[tgt]->pt - intPt).length() < 10 || (roads->graph[src2]->pt - intPt).length() < 10 || (roads->graph[tgt2]->pt - intPt).length() < 10) continue;
 
-						// 新たなエッジを追加する
-						addEdge(roads, src, new_v_desc, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
+				// 交点をノードとして登録
+				RoadVertex* new_v = new RoadVertex(intPt);
+				RoadVertexDesc new_v_desc = boost::add_vertex(roads->graph);
+				roads->graph[new_v_desc] = new_v;
 
-						addEdge(roads, new_v_desc, tgt, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
+				// もともとのエッジを無効にする
+				roads->graph[*ei]->valid = false;
+				roads->graph[*ei2]->valid = false;
 
-						addEdge(roads, src2, new_v_desc, roads->graph[*ei2]->lanes, roads->graph[*ei2]->type, roads->graph[*ei2]->oneWay);
+				// 新たなエッジを追加する
+				addEdge(roads, src, new_v_desc, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
+				addEdge(roads, new_v_desc, tgt, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
 
-						addEdge(roads, new_v_desc, tgt2, roads->graph[*ei2]->lanes, roads->graph[*ei2]->type, roads->graph[*ei2]->oneWay);
-					}
-				}
+				addEdge(roads, src2, new_v_desc, roads->graph[*ei2]->lanes, roads->graph[*ei2]->type, roads->graph[*ei2]->oneWay);
+				addEdge(roads, new_v_desc, tgt2, roads->graph[*ei2]->lanes, roads->graph[*ei2]->type, roads->graph[*ei2]->oneWay);
+
+				return true;
 			}
 		}
 	}
+
+	return false;
 }
 
 /**

@@ -14,6 +14,10 @@ MyGraphicsView::MyGraphicsView(QWidget *parent) : QGraphicsView(parent) {
 MyGraphicsView::~MyGraphicsView() {
 }
 
+void MyGraphicsView::updateRoads() {
+
+}
+
 /**
  * スケッチを元に、道路網を生成する。
  */
@@ -37,8 +41,26 @@ RoadGraph* MyGraphicsView::buildRoads() {
 	}
 
 	GraphUtil::planarify(roads);
-	GraphUtil::simplify(roads, 4.0f);
 	GraphUtil::clean(roads);
+	//GraphUtil::simplify(roads, 4.0f);
+	//GraphUtil::clean(roads);
+
+
+	// 作成された道路網に基づいて、スケッチを更新する
+	scene->clear();
+	RoadEdgeIter ei, eend;
+	for (boost::tie(ei, eend) = edges(roads->graph); ei != eend; ++ei) {
+		if (!roads->graph[*ei]->valid) continue;
+
+		Line* line = new Line();
+		for (int i = 0; i < roads->graph[*ei]->polyLine.size(); i++) {
+			line->points.push_back(roads->graph[*ei]->polyLine[i]);
+		}
+
+		scene->addItem(line);
+	}
+
+	update();
 
 	return roads;
 }

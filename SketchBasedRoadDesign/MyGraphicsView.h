@@ -18,6 +18,7 @@ public:
 	~MyGraphicsView();
 
 public:
+	void updateRoads();
 	RoadGraph* buildRoads();
 
 signals:
