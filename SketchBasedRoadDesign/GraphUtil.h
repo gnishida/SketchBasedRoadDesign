@@ -140,7 +140,7 @@ public:
 	// サンプル道路網を生成する関数
 	static RoadGraph* createGridNetwork(float size, int num);
 	static RoadGraph* createCurvyNetwork(float size, int num, float angle);
-	static RoadGraph* createRadialNetwork(float size, int num);
+	static RoadGraph* createRadialNetwork(float size, int num, int degree);
 
 	// デバッグ用の関数
 	static void printStatistics(RoadGraph* roads);

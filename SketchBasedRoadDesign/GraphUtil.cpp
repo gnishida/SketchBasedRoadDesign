@@ -2618,7 +2618,7 @@ QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findCorrespondentEdges(RoadGraph
 			permutation.push_back(i);
 		}
 
-		for (int count = 0; count < 1000; count++) {
+		for (int count = 0; count < 50000; count++) {
 			// 角度の差の最大値を求める
 			float diff = 0.0f;
 			for (int i = 0; i < children1.size(); i++) {
@@ -2662,7 +2662,7 @@ QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findCorrespondentEdges(RoadGraph
 			permutation.push_back(i);
 		}
 
-		for (int count = 0; count < 1000; count++) {
+		for (int count = 0; count < 50000; count++) {
 			// 角度の差の最大値を求める
 			float diff = 0.0f;
 			for (int i = 0; i < children2.size(); i++) {
@@ -3228,8 +3228,9 @@ RoadGraph* GraphUtil::createCurvyNetwork(float size, int num, float angle) {
  *
  * @param size		一辺の長さ [m]
  * @param num		円を何個作るか？
+ * @param degree	中心から出るエッジの数
  */
-RoadGraph* GraphUtil::createRadialNetwork(float size, int num) {
+RoadGraph* GraphUtil::createRadialNetwork(float size, int num, int degree) {
 	RoadGraph* roads = new RoadGraph();
 
 	float length = size / (float)(num + 1) / 2.0f;
@@ -3240,8 +3241,8 @@ RoadGraph* GraphUtil::createRadialNetwork(float size, int num) {
 	roads->graph[desc] = v;
 
 	for (int i = 0; i < num + 1; i++) {
-		for (int j = 0; j < 12; j++) {
-			float theta = (float)j / 12.0f * M_PI * 2.0f;
+		for (int j = 0; j < degree; j++) {
+			float theta = (float)j / (double)degree * M_PI * 2.0f;
 			RoadVertex* v = new RoadVertex(length * QVector2D((float)(i + 1) * cosf(theta), (float)(i + 1) * sinf(theta)));
 			RoadVertexDesc desc = boost::add_vertex(roads->graph);
 			roads->graph[desc] = v;
@@ -3249,25 +3250,25 @@ RoadGraph* GraphUtil::createRadialNetwork(float size, int num) {
 	}
 
 	// エッジを追加
-	for (int i = 0; i < 12; i++) {
+	for (int i = 0; i < degree; i++) {
 		addEdge(roads, 0, i + 1, 2, 2);
 	}
 	for (int i = 0; i < num; i++) {
-		for (int j = 0; j < 12; j++) {
-			addEdge(roads, 1 + i * 12 + j, 1 + (i + 1) * 12 + j, 2, 2);
+		for (int j = 0; j < degree; j++) {
+			addEdge(roads, 1 + i * degree + j, 1 + (i + 1) * degree + j, 2, 2);
 		}
 	}
 	for (int i = 0; i < num; i++) {
-		for (int j = 0; j < 12; j++) {
-			float theta = (float)j / 12.0f * M_PI * 2.0f;
-			float dt = 1.0f / 12.0f * M_PI * 2.0f;
+		for (int j = 0; j < degree; j++) {
+			float theta = (float)j / (double)degree * M_PI * 2.0f;
+			float dt = 1.0f / (double)degree * M_PI * 2.0f;
 			RoadEdge* e = new RoadEdge(2, 2, false);
 			for (int k = 0; k <= 4; k++) {
 				QVector2D pos = length * QVector2D((float)(i + 1) * cosf(theta + dt * (float)k / 4.0f), (float)(i + 1) * sinf(theta + dt * (float)k / 4.0f));
 				e->addPoint(pos);
 			}
 			
-			std::pair<RoadEdgeDesc, bool> edge_pair = boost::add_edge(1 + i * 12 + j, 1 + i * 12 + (j + 1) % 12, roads->graph);
+			std::pair<RoadEdgeDesc, bool> edge_pair = boost::add_edge(1 + i * degree + j, 1 + i * degree + (j + 1) % degree, roads->graph);
 			roads->graph[edge_pair.first] = e;
 			
 			//addEdge(roads, 1 + i * 12 + j, 1 + i * 12 + (j + 1) % 12, 2, 2);
