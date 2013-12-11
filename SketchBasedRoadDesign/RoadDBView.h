@@ -15,6 +15,6 @@ public:
 
 	void load(const char* filename);
 	float showSimilarity(RoadGraph* roads);
-	void updateView();
+	void updateView(RoadGraph* roads);
 };
 

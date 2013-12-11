@@ -27,7 +27,7 @@ RoadGraph* MyGraphicsView::sketchToRoads() {
 	for (int i = 0; i < scene->items().size(); i++) {
 		Line* line;
 		try {
-			line = (Line*)scene->items()[i];
+			line = dynamic_cast<Line*>(scene->items()[i]);
 		} catch (const char* ex) {
 		}
 
@@ -76,14 +76,33 @@ void MyGraphicsView::roadsToSketch() {
 	}
 
 	// 中心頂点を求め、大きい四角で表示
+	/*
 	RoadVertexDesc v1 = GraphUtil::getCentralVertex(roads);
 	scene->addRect(roads->graph[v1]->pt.x() - 3, roads->graph[v1]->pt.y() - 3, 6, 6, QPen(Qt::blue));
+	*/
 }
 
 /**
  * ＤＢから参照となる道路をセットする。
  */
 void MyGraphicsView::setReferene(RoadGraph* ref_roads) {
+	scene->clear();
+
+	RoadEdgeIter ei, eend;
+	for (boost::tie(ei, eend) = edges(ref_roads->graph); ei != eend; ++ei) {
+		if (!ref_roads->graph[*ei]->valid) continue;
+
+		Line* line = new Line();
+		for (int i = 0; i < ref_roads->graph[*ei]->polyLine.size(); i++) {
+			line->points.push_back(ref_roads->graph[*ei]->polyLine[i]);
+		}
+
+		scene->addItem(line);
+	}
+
+	this->scale(0.1, 0.1);
+
+	update();
 }
 
 /**

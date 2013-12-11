@@ -24,21 +24,26 @@ ControlWidget::~ControlWidget() {
 void ControlWidget::search() {
 	RoadGraph* roads = parent->view->sketchToRoads();
 
-	float min_similarity = std::numeric_limits<float>::max();
-	RoadDBView* min_view;
-
 	for (int i = 0; i < parent->examples.size(); i++) {
-		float similarity = parent->examples[i]->showSimilarity(roads);
-		if (similarity < min_similarity) {
-			min_similarity = similarity;
-			min_view = parent->examples[i];
-		}
+		parent->examples[i]->showSimilarity(roads);
 	}
-
-	parent->view->setReferene(min_view->roads);
 }
 
 void ControlWidget::accept() {
+	RoadGraph* roads = parent->view->sketchToRoads();
+
+	float max_similarity = 0;
+	RoadDBView* max_view;
+
+	for (int i = 0; i < parent->examples.size(); i++) {
+		float similarity = parent->examples[i]->showSimilarity(roads);
+		if (similarity < max_similarity) {
+			max_similarity = similarity;
+			max_view = parent->examples[i];
+		}
+	}
+
+	parent->view->setReferene(max_view->roads);
 }
 
 void ControlWidget::clear() {

@@ -58,34 +58,41 @@ void RoadDBView::load(const char* filename) {
 }
 
 float RoadDBView::showSimilarity(RoadGraph* roads2) {
+	RoadGraph* r1 = GraphUtil::copyRoads(roads);
+	RoadGraph* r2 = GraphUtil::copyRoads(roads2);
+
 	// 各道路網のImportanceを計算する
-	//GraphUtil::computeImportanceOfEdges(roads, 1.0f, 1.0f, 1.0f);
-	//GraphUtil::computeImportanceOfEdges(roads2, 1.0f, 1.0f, 1.0f);
+	//GraphUtil::computeImportanceOfEdges(r1, 1.0f, 1.0f, 1.0f);
+	//GraphUtil::computeImportanceOfEdges(r2, 1.0f, 1.0f, 1.0f);
 
 	// まず、それぞれの中心頂点を求める
-	RoadVertexDesc v1 = GraphUtil::getCentralVertex(roads);
-	RoadVertexDesc v2 = GraphUtil::getCentralVertex(roads2);
+	RoadVertexDesc v1 = GraphUtil::getCentralVertex(r1);
+	RoadVertexDesc v2 = GraphUtil::getCentralVertex(r2);
 
 	// 木構造を作成
-	BFSTree tree1(roads, v1);
-	BFSTree tree2(roads2, v2);
+	BFSTree tree1(r1, v1);
+	BFSTree tree2(r2, v2);
 
 	// マッチングを探す
 	QMap<RoadVertexDesc, RoadVertexDesc> map1;
 	QMap<RoadVertexDesc, RoadVertexDesc> map2;
-	GraphUtil::findCorrespondence(roads, &tree1, roads2, &tree2, false, 0.75f, map1, map2);
+	GraphUtil::findCorrespondence(r1, &tree1, r2, &tree2, false, 0.75f, map1, map2);
 
 	// マッチングに基づいて、道路網の表示を更新する
-	updateView();
+	updateView(r1);
 
 	// 類似度を計算する
-	float similarity = GraphUtil::computeSimilarity(roads, map1, roads2, map2, 1.0f, 5.0f);
+	float similarity = GraphUtil::computeSimilarity(r1, map1, r2, map2, 1.0f, 5.0f);
 	QString str;
 	str.setNum(similarity);
 	//score->setText(str);
 	QGraphicsSimpleTextItem* score = scene->addSimpleText(str, QFont("Times", 1000));
 	score->setPen(QPen(Qt::blue));
 	score->setPos(0, 0);
+
+	// テンポラリの道路網を削除
+	delete r1;
+	delete r2;
 
 	update();
 
@@ -96,7 +103,7 @@ float RoadDBView::showSimilarity(RoadGraph* roads2) {
  * マッチングに基づいて、道路網の表示を更新する。
  * 対応相手があるエッジは赤色で、その他は、黒色で表示する。
  */
-void RoadDBView::updateView() {
+void RoadDBView::updateView(RoadGraph* roads) {
 	scene->clear();
 
 	RoadEdgeIter ei, eend;
