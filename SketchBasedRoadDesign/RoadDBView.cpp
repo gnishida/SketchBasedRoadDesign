@@ -50,7 +50,7 @@ void RoadDBView::load(const char* filename) {
 		scene->addItem(line);
 	}
 
-	// 中心頂点を求め、大きい四角で表示
+	// Draw a square for the central vertex
 	RoadVertexDesc v1 = GraphUtil::getCentralVertex(roads);
 	scene->addRect(roads->graph[v1]->pt.x() + 4900, roads->graph[v1]->pt.y() + 4900, 200, 200, QPen(Qt::blue));
 
@@ -61,27 +61,27 @@ float RoadDBView::showSimilarity(RoadGraph* roads2) {
 	RoadGraph* r1 = GraphUtil::copyRoads(roads);
 	RoadGraph* r2 = GraphUtil::copyRoads(roads2);
 
-	// 各道路網のImportanceを計算する
+	// Compute the importance of each edge
 	//GraphUtil::computeImportanceOfEdges(r1, 1.0f, 1.0f, 1.0f);
 	//GraphUtil::computeImportanceOfEdges(r2, 1.0f, 1.0f, 1.0f);
 
-	// まず、それぞれの中心頂点を求める
+	// Find the central vertex
 	RoadVertexDesc v1 = GraphUtil::getCentralVertex(r1);
 	RoadVertexDesc v2 = GraphUtil::getCentralVertex(r2);
 
-	// 木構造を作成
+	// Create a tree
 	BFSTree tree1(r1, v1);
 	BFSTree tree2(r2, v2);
 
-	// マッチングを探す
+	// Find the matching
 	QMap<RoadVertexDesc, RoadVertexDesc> map1;
 	QMap<RoadVertexDesc, RoadVertexDesc> map2;
 	GraphUtil::findCorrespondence(r1, &tree1, r2, &tree2, false, 0.75f, map1, map2);
 
-	// マッチングに基づいて、道路網の表示を更新する
+	// Update the view based on the matching
 	updateView(r1);
 
-	// 類似度を計算する
+	// Compute the similarity
 	float similarity = GraphUtil::computeSimilarity(r1, map1, r2, map2, 1.0f, 5.0f);
 	QString str;
 	str.setNum(similarity);
@@ -90,7 +90,7 @@ float RoadDBView::showSimilarity(RoadGraph* roads2) {
 	score->setPen(QPen(Qt::blue));
 	score->setPos(0, 0);
 
-	// テンポラリの道路網を削除
+	// Delete the temporal roads
 	delete r1;
 	delete r2;
 
@@ -100,8 +100,8 @@ float RoadDBView::showSimilarity(RoadGraph* roads2) {
 }
 
 /**
- * マッチングに基づいて、道路網の表示を更新する。
- * 対応相手があるエッジは赤色で、その他は、黒色で表示する。
+ * Update the view based on the road graph with matching infromation.
+ * If the edge has a corresponding one, color it with red. Otherwise, color itt with black.
  */
 void RoadDBView::updateView(RoadGraph* roads) {
 	scene->clear();
@@ -127,7 +127,7 @@ void RoadDBView::updateView(RoadGraph* roads) {
 		scene->addItem(line);
 	}
 
-	// 中心頂点を求め、大きい四角で表示
+	// Draw the square for the central vertex
 	RoadVertexDesc v1 = GraphUtil::getCentralVertex(roads);
 	scene->addRect(roads->graph[v1]->pt.x() + 4900, roads->graph[v1]->pt.y() + 4900, 200, 200, QPen(Qt::blue));
 }

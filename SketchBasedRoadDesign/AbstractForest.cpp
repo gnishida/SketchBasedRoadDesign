@@ -8,7 +8,7 @@ AbstractForest::~AbstractForest() {
 }
 
 /**
- * 子ノードのリストを返却する。
+ * Return the children nodes.
  */
 std::vector<RoadVertexDesc>& AbstractForest::getChildren(RoadVertexDesc node) {
 	if (!children.contains(node)) {
@@ -20,7 +20,7 @@ std::vector<RoadVertexDesc>& AbstractForest::getChildren(RoadVertexDesc node) {
 }
 
 /**
- * 子ノードを追加する。
+ * Add a child node.
  */
 void AbstractForest::addChild(RoadVertexDesc parent, RoadVertexDesc child) {
 	std::vector<RoadVertexDesc> list = getChildren(parent);
@@ -29,7 +29,7 @@ void AbstractForest::addChild(RoadVertexDesc parent, RoadVertexDesc child) {
 }
 
 /**
- * 親ノードのリストを返却する。
+ * Return the parents nodes.
  */
 QList<RoadVertexDesc> AbstractForest::getParent(RoadVertexDesc node) {
 	QList<RoadVertexDesc> ret;
@@ -47,7 +47,7 @@ QList<RoadVertexDesc> AbstractForest::getParent(RoadVertexDesc node) {
 }
 
 /**
- * ルートノードを返却する。
+ * Return the root nodes.
  */
 QList<RoadVertexDesc> AbstractForest::getRoots() {
 	return roots;

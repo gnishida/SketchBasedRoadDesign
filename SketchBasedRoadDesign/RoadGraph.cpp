@@ -163,6 +163,7 @@ void RoadGraph::save(FILE* fp) {
  * 接続性情報を計算する。
  * 注意：頂点の追加、エッジの追加などにより、この情報は正しくなくなる！
  */
+/*
 void RoadGraph::computeConnectivities() {
 	connectivities.clear();
 
@@ -205,6 +206,7 @@ bool RoadGraph::isConnected(RoadVertexDesc desc1, RoadVertexDesc desc2) {
 
 	return connectivities[desc1].contains(desc2);
 }
+*/
 
 /**
  * エッジの重みを計算する。

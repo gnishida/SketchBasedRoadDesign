@@ -17,7 +17,7 @@ MyGraphicsView::~MyGraphicsView() {
 }
 
 /**
- * スケッチを元に、道路網を生成する。
+ * Create a road graph from the sketch.
  */
 RoadGraph* MyGraphicsView::sketchToRoads() {
 	if (roads != NULL) delete roads;
@@ -50,7 +50,7 @@ RoadGraph* MyGraphicsView::sketchToRoads() {
 	GraphUtil::simplify(roads, 20.0f);
 	GraphUtil::clean(roads);
 
-	// 作成された道路網に基づいて、スケッチを更新する
+	// Update the sketch based on the built road graph
 	roadsToSketch();
 
 	update();
@@ -59,7 +59,7 @@ RoadGraph* MyGraphicsView::sketchToRoads() {
 }
 
 /**
- * 道路網データから、スケッチデータを生成する。
+ * Create sketch data from the road graph.
  */
 void MyGraphicsView::roadsToSketch() {
 	scene->clear();
@@ -75,7 +75,7 @@ void MyGraphicsView::roadsToSketch() {
 		scene->addItem(line);
 	}
 
-	// 中心頂点を求め、大きい四角で表示
+	// Draw a square for the central vertex
 	/*
 	RoadVertexDesc v1 = GraphUtil::getCentralVertex(roads);
 	scene->addRect(roads->graph[v1]->pt.x() - 3, roads->graph[v1]->pt.y() - 3, 6, 6, QPen(Qt::blue));
@@ -83,7 +83,7 @@ void MyGraphicsView::roadsToSketch() {
 }
 
 /**
- * ＤＢから参照となる道路をセットする。
+ * Set the referecne road graph.
  */
 void MyGraphicsView::setReferene(RoadGraph* ref_roads) {
 	scene->clear();
@@ -106,7 +106,7 @@ void MyGraphicsView::setReferene(RoadGraph* ref_roads) {
 }
 
 /**
- * 画面をクリアする。
+ * Clear the view.
  */
 void MyGraphicsView::clear() {
 	scene->clear();

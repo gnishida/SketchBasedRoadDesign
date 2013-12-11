@@ -2,9 +2,8 @@
 #include "GraphUtil.h"
 
 /**
- * コンストラクタ
- * rootsには、２つの頂点を１ペアとして、頂点ペアが並んでいる。各ペアは、エッジに対応する。
- * つまり、roots.size()は、偶数であるはず。
+ * Constructor
+ * root is the root node to be used to create the tree.
  */
 BFSTree::BFSTree(RoadGraph* roads, RoadVertexDesc root) : AbstractForest(roads) {
 	this->roots.push_back(root);

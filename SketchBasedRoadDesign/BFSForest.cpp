@@ -2,9 +2,10 @@
 #include "GraphUtil.h"
 
 /**
- * コンストラクタ
- * rootsには、２つの頂点を１ペアとして、頂点ペアが並んでいる。各ペアは、エッジに対応する。
- * つまり、roots.size()は、偶数であるはず。
+ * Constructor
+ * 
+ * roots contains some pairs of two vertices.
+ * Each pair contains two vertices that are corresponding each other.
  */
 BFSForest::BFSForest(RoadGraph* roads, QList<RoadVertexDesc> roots) : AbstractForest(roads) {
 	this->roots = roots;
@@ -22,67 +23,67 @@ void BFSForest::buildForest() {
 	QMap<RoadEdgeDesc, bool> visitedEdge;
 	QMap<RoadVertexDesc, bool> visitedVertex;
 
-	// ルートとして与えられた頂点について
+	// For each root node
 	for (int i = 0; i < roots.size() / 2; i++) {
 		RoadVertexDesc src = roots[i * 2];
 		RoadVertexDesc tgt = roots[i * 2 + 1];
 
-		// エッジの取得
+		// Get the edge
 		RoadEdgeDesc e_desc = GraphUtil::getEdge(roads, src, tgt);
 
-		// エッジのグループ、seedフラグを設定
+		// Set the group and the seed flag for the edge
 		roads->graph[e_desc]->group = i;
 		roads->graph[e_desc]->seed = true;
 
-		// 頂点srcが既存のシードと重複している場合
+		// If the src node is already used as a seed
 		if (seeds.contains(src)) {
-			// 頂点srcをコピーする
+			// copy the src vertex
 			RoadVertex* v = new RoadVertex(roads->graph[src]->pt);
 			RoadVertexDesc new_src = boost::add_vertex(roads->graph);
 			roads->graph[new_src] = v;
 
-			// 古いエッジを削除
+			// remove the old edge
 			roads->graph[e_desc]->valid = false;
 
-			// 新しいエッジを追加
+			// add a new edge
 			e_desc = GraphUtil::addEdge(roads, new_src, tgt, roads->graph[e_desc]);
 
 			src = new_src;
 		}
 
-		// 頂点tgtが既存のシードと重複している場合
+		// If the tgt node is already used as a seed
 		if (seeds.contains(tgt)) {
-			// 頂点tgtをコピーする
+			// copy the tgt vertex
 			RoadVertex* v = new RoadVertex(roads->graph[tgt]->pt);
 			RoadVertexDesc new_tgt = boost::add_vertex(roads->graph);
 			roads->graph[new_tgt] = v;
 
-			// 古いエッジを削除
+			// remove the old edge
 			roads->graph[e_desc]->valid = false;
 
-			// 新しいエッジを追加
+			// add a new edge
 			e_desc = GraphUtil::addEdge(roads, src, new_tgt, roads->graph[e_desc]);
 
 			tgt = new_tgt;
 		}
 
-		// src、tgtが更新されたかも知れないので、おおもとのデータも更新しておく
+		// update the roots
 		roots[i * 2] = src;
 		roots[i * 2 + 1] = tgt;
 
-		// シードを登録する
+		// register the seeds
 		seeds.push_back(src);
 		seeds.push_back(tgt);
 		groups.push_back(i);
 		groups.push_back(i);
 
-		// ルートエッジ・頂点を訪問済みとマークする
+		// mark root edges as visited
 		visitedEdge[e_desc] = true;
 		visitedVertex[src] = true;
 		visitedVertex[tgt] = true;
 	}
 
-	// ルート頂点リストからスタートして、BFSで全頂点を訪問する
+	// starting from the roots, traverse all the nodes in the BFS manner
 	while (!seeds.empty()) {
 		RoadVertexDesc parent = seeds.front();
 		seeds.pop_front();
@@ -92,7 +93,7 @@ void BFSForest::buildForest() {
 
 		std::vector<RoadVertexDesc> children;
 
-		// 隣接ノードリストを先に洗い出す
+		// list up all the neighbor nodes
 		std::vector<RoadVertexDesc> nodes;
 		std::vector<RoadEdgeDesc> edges;
 		RoadOutEdgeIter ei, eend;
@@ -100,7 +101,7 @@ void BFSForest::buildForest() {
 			if (!roads->graph[*ei]->valid) continue;
 			if (visitedEdge[*ei]) continue;
 
-			// 隣接ノードを取得
+			// retrieve the neighbor
 			RoadVertexDesc child = boost::target(*ei, roads->graph);
 			if (!roads->graph[child]->valid) continue;
 
@@ -109,31 +110,31 @@ void BFSForest::buildForest() {
 			nodes.push_back(child);
 			edges.push_back(*ei);
 
-			// 当該エッジを通過したとマークする
+			// mark the edge as passed
 			visitedEdge[*ei] = true;
 		}
 
-		// 洗い出した隣接ノードに対して、訪問する
+		// visit each neighbor node
 		for (int i = 0; i < nodes.size(); i++) {
 			RoadVertexDesc child = nodes[i];
 
-			if (visitedVertex.contains(child)) { // 訪問済みの場合
+			if (visitedVertex.contains(child)) { // if it is already visited
 				RoadEdgeDesc orig_e_desc = GraphUtil::getEdge(roads, parent, child);
 
-				// もともとのエッジを無効にする
+				// invalidate the original edge
 				roads->graph[orig_e_desc]->valid = false;
 
-				// 対象ノードが訪問済みの場合、対象ノードをコピーして子ノードにする
+				// if the node is already visited, copy it and add it as a child.
 				RoadVertexDesc child2 = GraphUtil::addVertex(roads, roads->graph[child]);
 				roads->graph[child2]->virt = false;
 
-				// エッジ作成
+				// create a new edge
 				RoadEdgeDesc e_desc = GraphUtil::addEdge(roads, parent, child2, roads->graph[orig_e_desc]);
 
 				roads->graph[e_desc]->group = group;
 
 				children.push_back(child2);
-			} else { // 未訪問の場合
+			} else { // if it is not visited
 				visitedVertex[child] = true;
 				roads->graph[edges[i]]->group = group;
 

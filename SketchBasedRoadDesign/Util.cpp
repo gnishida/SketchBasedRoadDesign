@@ -66,7 +66,7 @@ bool Util::segmentSegmentIntersectXY(const QVector2D& a, const QVector2D& b, con
 }
 
 /**
- * エッジABと頂点Cの距離を計算して返却する。さらに、エッジAB上で最も頂点Cに近い点をclosestPtInABに格納する。
+ * Compute the distance between the edge A-B and the edge C-D. Store the coordinate of the closest point in closestPtInAB.
  */
 float Util::pointSegmentDistanceXY(const QVector2D& a, const QVector2D& b, const QVector2D& c, QVector2D& closestPtInAB) {
 	float dist;		
@@ -82,7 +82,6 @@ float Util::pointSegmentDistanceXY(const QVector2D& a, const QVector2D& b, const
 
 	float distanceLine = fabs(s)*sqrt(r_denomenator);
 
-	// エッジAB上で最も頂点Cに近い点をclosestPtInABに格納する。
 	closestPtInAB.setX(px);
 	closestPtInAB.setY(py);
 

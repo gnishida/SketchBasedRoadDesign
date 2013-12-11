@@ -33,7 +33,7 @@ protected:
 	GraphUtil() {}
 
 public:
-	// 頂点関係の関数
+	// Vertex related functions
 	static int getNumVertices(RoadGraph* roads, bool onlyValidVertex = true);
 	static int getNumConnectedVertices(RoadGraph* roads, RoadVertexDesc start, bool onlyValidVertex = true);
 	static RoadVertexDesc getVertex(RoadGraph* roads, int index, bool onlyValidVertex = true);
@@ -48,7 +48,7 @@ public:
 	static void snapVertex(RoadGraph* roads, RoadVertexDesc v1, RoadVertexDesc v2);
 	static RoadVertexDesc getCentralVertex(RoadGraph* roads);
 
-	// エッジ関係の関数
+	// Edge related functions
 	static RoadEdgeDesc getEdge(RoadGraph* roads, int index, bool onlyValidEdge = true);
 	static float getTotalEdgeLength(RoadGraph* roads, RoadVertexDesc v);
 	static void collapseEdge(RoadGraph* roads, RoadEdgeDesc e);
@@ -66,9 +66,8 @@ public:
 	static void computeImportanceOfEdges(RoadGraph* roads, float w_length, float w_valence, float w_lanes);
 	static float computeDissimilarityOfEdges(RoadGraph* roads1, RoadEdgeDesc e1, RoadGraph* roads2, RoadEdgeDesc e2);
 	static void removeIsolatedEdges(RoadGraph* roads, bool onlyValidEdge = true);
-	//static RoadEdgeDesc getImportantEdge(RoadGraph* roads, int relaxation = 1);
 
-	// 道路網全体に関する関数
+	// The entire graph related functions
 	static RoadGraph* copyRoads(RoadGraph* roads);
 	static void copyRoads(RoadGraph* roads1, RoadGraph* roads2);
 	static BBox getAABoundingBox(RoadGraph* roads);
@@ -76,20 +75,17 @@ public:
 	static RoadGraph* extractMajorRoad(RoadGraph* roads, bool remove = true);
 	static float extractMajorRoad(RoadGraph* roads, RoadEdgeDesc root, QList<RoadEdgeDesc>& path);
 
-	// 隣接関係、接続性などの関数
+	// Connectivity related functions
 	static std::vector<RoadVertexDesc> getNeighbors(RoadGraph* roads, RoadVertexDesc v, bool onlyValidVertex = true);
 	static bool isNeighbor(RoadGraph* roads, RoadVertexDesc v1, RoadVertexDesc v2);
-	//static bool isReachable(RoadGraph* roads, RoadVertexDesc src, RoadVertexDesc tgt);
-	static bool isDirectlyConnected(RoadGraph* roads, RoadVertexDesc desc1, RoadVertexDesc desc2, bool onlyValidEdge = true);
 	static bool isConnected(RoadGraph* roads, RoadVertexDesc desc1, RoadVertexDesc desc2, bool onlyValidEdge = true);
 	static RoadVertexDesc findNearestVertex(RoadGraph* roads, const QVector2D &pt);
 	static RoadVertexDesc findNearestVertex(RoadGraph* roads, const QVector2D &pt, RoadVertexDesc ignore);
 	static RoadVertexDesc findConnectedNearestNeighbor(RoadGraph* roads, const QVector2D &pt, RoadVertexDesc v);
 	static bool getEdge(RoadGraph* roads, const QVector2D &pt, float threshold, RoadEdgeDesc& e, bool onlyValidEdge = true);
 	static RoadEdgeDesc findNearestEdge(RoadGraph* roads, RoadVertexDesc v, float& dist, QVector2D& closestPt, bool onlyValidEdge = true);
-	static std::vector<RoadVertexDesc> getChildren(RoadGraph* roads, RoadVertexDesc v);
 
-	// 道路網の変更関係の関数
+	// The road graph modification functions
 	static void clean(RoadGraph* roads);
 	static void reduce(RoadGraph* roads);
 	static bool reduce(RoadGraph* roads, RoadVertexDesc desc);
@@ -110,14 +106,13 @@ public:
 	static void snapDeadendEdges2(RoadGraph* roads, int degree, float threshold);
 	static void removeShortDeadend(RoadGraph* roads, float threshold);
 
-	// その他
+	// Others
 	static float computeMinDiffAngle(std::vector<float> *data1, std::vector<float> *data2);
 	static float normalizeAngle(float angle);
 	static float diffAngle(const QVector2D& dir1, const QVector2D& dir2);
 	static float diffAngle(float angle1, float angle2);
 
-	// 道路網の比較関数
-	static float computeMinUnsimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadVertexDesc>& map1, RoadGraph* roads2, QMap<RoadVertexDesc, RoadVertexDesc>& map2);
+	// Compute similarity
 	static float computeDissimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadVertexDesc>& map1, RoadGraph* roads2, QMap<RoadVertexDesc, RoadVertexDesc>& map2, float w_connectivity, float w_split, float w_angle, float w_distance);
 	static float computeDissimilarity2(RoadGraph* roads1, QMap<RoadVertexDesc, RoadVertexDesc>& map1, RoadGraph* roads2, QMap<RoadVertexDesc, RoadVertexDesc>& map2, float w_matching, float w_split, float w_angle, float w_distance);
 	static float computeSimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadVertexDesc>& map1, RoadGraph* roads2, QMap<RoadVertexDesc, RoadVertexDesc>& map2, float w_connectivity, float w_angle);
@@ -129,7 +124,7 @@ public:
 
 	static bool nextSequence(std::vector<int>& seq, int N);
 
-	// 統計情報
+	// Statistics
 	static float computeAvgEdgeLength(RoadGraph* roads);
 	static QList<EdgePair> getClosestEdgePairs(RoadGraph* roads1, RoadGraph* roads2, int num);
 
@@ -138,12 +133,12 @@ public:
 	static cv::Mat convertVerticesToCVMatrix(RoadGraph* roads, bool onlyValidVertex = true);
 	static cv::Mat convertEdgesToCVMatrix(RoadGraph* roads, bool onlyValidVertex = true);
 
-	// サンプル道路網を生成する関数
+	// Sample road networks
 	static RoadGraph* createGridNetwork(float size, int num);
 	static RoadGraph* createCurvyNetwork(float size, int num, float angle);
 	static RoadGraph* createRadialNetwork(float size, int num, int degree);
 
-	// デバッグ用の関数
+	// For debugging
 	static void printStatistics(RoadGraph* roads);
 };
 

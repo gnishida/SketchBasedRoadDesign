@@ -21,8 +21,8 @@ EdgePairComparison::EdgePairComparison(RoadGraph* roads1, RoadGraph* roads2) {
 }
 
 /**
- * 非類似度が小さいものが先頭に来るようソートする。
- * つまり、似ているエッジペアが先頭に来る。
+ * Sort the edge pairs according to the dissimilarity.
+ * The pair with low dissimilarity comes to the head of the list, i.e. the head of the list contains the most similar edge pair.
  */
 bool EdgePairComparison::operator()(const EdgePair& left, const EdgePair& right) const {
 	float dissimilarity1 = GraphUtil::computeDissimilarityOfEdges(roads1, left.edge1, roads2, left.edge2);
@@ -32,8 +32,7 @@ bool EdgePairComparison::operator()(const EdgePair& left, const EdgePair& right)
 }
 
 /**
- * 頂点の数を返却する。
- * onlyValidVertexフラグがtrueの場合は、全ての頂点のvalidフラグをチェックしてカウントする。
+ * Return the number of vertices.
  *
  */
 int GraphUtil::getNumVertices(RoadGraph* roads, bool onlyValidVertex) {
@@ -53,7 +52,7 @@ int GraphUtil::getNumVertices(RoadGraph* roads, bool onlyValidVertex) {
 }
 
 /**
- * 指定した頂点から辿れる頂点の数を返却する。
+ * Return the number of vertices which are connected to the specified vertex.
  */
 int GraphUtil::getNumConnectedVertices(RoadGraph* roads, RoadVertexDesc start, bool onlyValidVertex) {
 	int count = 1;
@@ -87,8 +86,7 @@ int GraphUtil::getNumConnectedVertices(RoadGraph* roads, RoadVertexDesc start, b
 }
 
 /**
- * index番目の頂点を返却する。
- * onlyValidVertexフラグがtrueの場合は、有効な頂点のみをカウントする。
+ * Return the index-th vertex.
  */
 RoadVertexDesc GraphUtil::getVertex(RoadGraph* roads, int index, bool onlyValidVertex) {
 	int count = 0;
@@ -105,8 +103,8 @@ RoadVertexDesc GraphUtil::getVertex(RoadGraph* roads, int index, bool onlyValidV
 }
 
 /**
- * 指定した座標からthreshold以内の頂点を探し、あればtrue返却する。
- * 存在しない場合は、falseを返却する。
+ * Find the closest vertex from the specified point. 
+ * If the closet vertex is within the threshold, return true. Otherwise, return false.
  */
 bool GraphUtil::getVertex(RoadGraph* roads, QVector2D pos, float threshold, RoadVertexDesc& desc, bool onlyValidVertex) {
 	float min_dist = std::numeric_limits<float>::max();
@@ -144,7 +142,7 @@ int GraphUtil::getVertexIndex(RoadGraph* roads, RoadVertexDesc desc, bool onlyVa
 }
 
 /**
- * 頂点を追加する。
+ * Add a vertex.
  */
 RoadVertexDesc GraphUtil::addVertex(RoadGraph* roads, RoadVertex* v) {
 	RoadVertex* new_v = new RoadVertex(*v);
@@ -155,11 +153,11 @@ RoadVertexDesc GraphUtil::addVertex(RoadGraph* roads, RoadVertex* v) {
 }
 
 /**
- * 指定された頂点を移動する
- * とりあえず、無効なエッジも含めて、隣接エッジを併せて移動する。
+ * Move the vertex to the specified location.
+ * The outing edges are also moved accordingly.
  */
 void GraphUtil::moveVertex(RoadGraph* roads, RoadVertexDesc v, QVector2D pt) {
-	// 隣接エッジを移動する
+	// Move the outing edges
 	RoadOutEdgeIter ei, eend;
 	for (boost::tie(ei, eend) = boost::out_edges(v, roads->graph); ei != eend; ++ei) {
 		RoadVertexDesc tgt = boost::target(*ei, roads->graph);
@@ -179,12 +177,12 @@ void GraphUtil::moveVertex(RoadGraph* roads, RoadVertexDesc v, QVector2D pt) {
 		roads->graph[*ei]->polyLine = polyLine;
 	}
 
-	// 指定された頂点を移動する
+	// Move the vertex
 	roads->graph[v]->pt = pt;
 }
 
 /**
- * グラフのノードv1をv2にcollapseする。
+ * Collapse v1 to v2.
  */
 void GraphUtil::collapseVertex(RoadGraph* roads, RoadVertexDesc v1, RoadVertexDesc v2) {
 	if (v1 == v2) return;
@@ -195,23 +193,24 @@ void GraphUtil::collapseVertex(RoadGraph* roads, RoadVertexDesc v1, RoadVertexDe
 	for (boost::tie(ei, eend) = boost::out_edges(v1, roads->graph); ei != eend; ++ei) {
 		if (!roads->graph[*ei]->valid) continue;
 
-		// v1の隣接ノードv1bを取得
+		// retrive the neighbor of v1
 		RoadVertexDesc v1b = boost::target(*ei, roads->graph);
 
-		// v1 - v1b間のエッジを無効にする
+		// invalidate the edge between v1 and v1b
 		roads->graph[*ei]->valid = false;
 
-		// v2 - v1b間が既に接続されているなら、エッジは作成しない
-		if (isDirectlyConnected(roads, v2, v1b)) continue;
+		if (v2 == v1b) continue;
 
-		// v2 - v1b間にエッジを作成する
+		// If there is already an edge between v2 and v1b, don't create another edge.
+		if (hasEdge(roads, v2, v1b)) continue;
+
+		// create an edge between v2 and v1b
 		addEdge(roads, v2, v1b, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
 	}
 }
 
 /**
- * 指定した頂点のDegreeを返却する。
- * onlyValidEdge = trueの場合は、validのエッジのみをカウントする。
+ * Return the degree of the specified vertex.
  */
 int GraphUtil::getDegree(RoadGraph* roads, RoadVertexDesc v, bool onlyValidEdge) {
 	if (onlyValidEdge) {
@@ -227,7 +226,7 @@ int GraphUtil::getDegree(RoadGraph* roads, RoadVertexDesc v, bool onlyValidEdge)
 }
 
 /**
- * 頂点リストを取得する
+ * Return the list of vertices.
  */
 std::vector<RoadVertexDesc> GraphUtil::getVertices(RoadGraph* roads, bool onlyValidVertex) {
 	std::vector<RoadVertexDesc> ret;
@@ -243,7 +242,7 @@ std::vector<RoadVertexDesc> GraphUtil::getVertices(RoadGraph* roads, bool onlyVa
 }
 
 /**
- * 孤立した頂点を無効にする
+ * Remove the isolated vertices.
  */
 void GraphUtil::removeIsolatedVertices(RoadGraph* roads, bool onlyValidVertex) {
 	RoadVertexIter vi, vend;
@@ -257,31 +256,31 @@ void GraphUtil::removeIsolatedVertices(RoadGraph* roads, bool onlyValidVertex) {
 }
 
 /**
- * 頂点v1を頂点v2にスナップする
+ * Snap v1 to v2.
  */
 void GraphUtil::snapVertex(RoadGraph* roads, RoadVertexDesc v1, RoadVertexDesc v2) {
 	moveVertex(roads, v1, roads->graph[v2]->pt);
 
-	// 頂点v1と接続された全てのエッジをつけかえる
+	// Snap all the outing edges from v1
 	RoadOutEdgeIter ei, eend;
 	for (boost::tie(ei, eend) = boost::out_edges(v1, roads->graph); ei != eend; ++ei) {
 		if (!roads->graph[*ei]->valid) continue;
 
 		RoadVertexDesc tgt = boost::target(*ei, roads->graph);
 
-		// エッジを追加する
+		// add a new edge
 		addEdge(roads, v2, tgt, roads->graph[*ei]);
 
-		// 古いエッジを無効にする
+		// invalidate the old edge
 		roads->graph[*ei]->valid = false;
 	}
 
-	// 頂点v1を無効にする
+	// invalidate v1
 	roads->graph[v1]->valid = false;
 }
 
 /**
- * 道路網の中心に最も近い頂点を返却する。
+ * Return the central vertex.
  */
 RoadVertexDesc GraphUtil::getCentralVertex(RoadGraph* roads) {
 	BBox box = getAABoundingBox(roads);
@@ -289,7 +288,7 @@ RoadVertexDesc GraphUtil::getCentralVertex(RoadGraph* roads) {
 }
 
 /**
- * index番目のエッジを返却する。
+ * Return the index-th edge.
  */
 RoadEdgeDesc GraphUtil::getEdge(RoadGraph* roads, int index, bool onlyValidEdge) {
 	int count = 0;
@@ -305,7 +304,7 @@ RoadEdgeDesc GraphUtil::getEdge(RoadGraph* roads, int index, bool onlyValidEdge)
 }
 
 /**
- * 指定した頂点から出ているエッジの長さの合計を返却する
+ * Return the total lengths of the edges outing from the specified vertex.
  */
 float GraphUtil::getTotalEdgeLength(RoadGraph* roads, RoadVertexDesc v) {
 	float ret = 0.0f;
@@ -320,14 +319,15 @@ float GraphUtil::getTotalEdgeLength(RoadGraph* roads, RoadVertexDesc v) {
 }
 
 /**
- * グラフの指定エッジを削除する。Degreeの小さいほうの頂点を削除する。
+ * Remove the edge. 
+ * Remove the vertex that has smaller number of degrees.
  */
 void GraphUtil::collapseEdge(RoadGraph* roads, RoadEdgeDesc e) {
 	RoadVertexDesc v1 = boost::source(e, roads->graph);
 	RoadVertexDesc v2 = boost::target(e, roads->graph);
 	if (v1 == v2) return;
 
-	// 当該エッジを無効にする
+	// invalidate the edge
 	roads->graph[e]->valid = false;
 
 	if (getDegree(roads, v1) < getDegree(roads, v2)) {
@@ -335,35 +335,10 @@ void GraphUtil::collapseEdge(RoadGraph* roads, RoadEdgeDesc e) {
 	} else {
 		snapVertex(roads, v2, v1);
 	}
-
-	/*
-	// 頂点v2を無効にする
-	roads->graph[v2]->valid = false;
-
-	std::vector<RoadEdgeDesc> removedEdges;
-	std::vector<RoadEdgeDesc> addedEdges;
-
-	// 頂点v2と連結している頂点を、頂点v1と接続する
-	RoadOutEdgeIter ei, eend;
-	for (boost::tie(ei, eend) = boost::out_edges(v2, roads->graph); ei != eend; ++ei) {
-		if (!roads->graph[*ei]->valid) continue;
-
-		RoadVertexDesc v3 = boost::target(*ei, roads->graph);
-		if (v3 == v1) continue;
-
-		if (isNeighbor(roads, v1, v3)) {
-			roads->graph[*ei]->valid = false;
-		} else {
-			roads->graph[*ei]->valid = false;
-
-			RoadEdgeDesc new_e_desc = addEdge(roads, v1, v3, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
-		}
-	}
-	*/
 }
 
 /**
- * エッジの数を返却する。
+ * Return the number of edges.
  */
 int GraphUtil::getNumEdges(RoadGraph* roads, bool onlyValidEdge) {
 	int count = 0;
@@ -377,8 +352,8 @@ int GraphUtil::getNumEdges(RoadGraph* roads, bool onlyValidEdge) {
 }
 
 /**
- * エッジを追加する
- * 注意：この関数では、polyLineには両端ノードしか登録されない。つまり、直線のエッジとなる。
+ * Add an edge.
+ * Note: This function creates a straight line of edge.
  */
 RoadEdgeDesc GraphUtil::addEdge(RoadGraph* roads, RoadVertexDesc src, RoadVertexDesc tgt, unsigned int lanes, unsigned int type, bool oneWay) {
 	if (hasEdge(roads, src, tgt, false)) {
@@ -403,19 +378,19 @@ RoadEdgeDesc GraphUtil::addEdge(RoadGraph* roads, RoadVertexDesc src, RoadVertex
 }
 
 /**
- * エッジを追加する
- * 参照エッジref_edgeを使って、レーン数、タイプ、一方通行、polyLineなどを設定する。
+ * Add an edge.
+ * Note: This function creates a edge which is copied from the reference edge.
  */
 RoadEdgeDesc GraphUtil::addEdge(RoadGraph* roads, RoadVertexDesc src, RoadVertexDesc tgt, RoadEdge* ref_edge) {
 	if (hasEdge(roads, src, tgt, false)) {
-		// 既にエッジがある場合は、それを更新する
+		// If there is an edge, update it instead of creating another one.
 		RoadEdgeDesc edge_desc = getEdge(roads, src, tgt, false);
 		*roads->graph[edge_desc] = *ref_edge;
 		roads->graph[edge_desc]->valid = true;
 
 		return edge_desc;
 	} else {
-		// エッジがない場合は、エッジを新規追加する
+		// If there is no edge, add an edge.
 		RoadEdge* e = new RoadEdge(*ref_edge);
 		e->valid = true;
 
@@ -427,8 +402,7 @@ RoadEdgeDesc GraphUtil::addEdge(RoadGraph* roads, RoadVertexDesc src, RoadVertex
 }
 
 /**
- * ２つの頂点間にエッジがあるかチェックする。
- * ただし、無効フラグの立っているエッジは、エッジがないとみなす。
+ * Check if there is an edge between two vertices.
  */
 bool GraphUtil::hasEdge(RoadGraph* roads, RoadVertexDesc desc1, RoadVertexDesc desc2, bool onlyValidEdge) {
 	RoadOutEdgeIter ei, eend;
@@ -450,7 +424,7 @@ bool GraphUtil::hasEdge(RoadGraph* roads, RoadVertexDesc desc1, RoadVertexDesc d
 }
 
 /**
- * srcとtgtの間のエッジを返却する。
+ * Return the edge between src and tgt.
  */
 RoadEdgeDesc GraphUtil::getEdge(RoadGraph* roads, RoadVertexDesc src, RoadVertexDesc tgt, bool onlyValidEdge) {
 	RoadOutEdgeIter ei, eend;
@@ -470,7 +444,7 @@ RoadEdgeDesc GraphUtil::getEdge(RoadGraph* roads, RoadVertexDesc src, RoadVertex
 }
 
 /**
- * 指定したエッジについて、polyLineのリストを、src頂点から並ぶようにして返却する。
+ * Sort the points of the polyline of the edge in such a way that the first point is the location of the src vertex.
  */
 std::vector<QVector2D> GraphUtil::getOrderedPolyLine(RoadGraph* roads, RoadEdgeDesc e) {
 	std::vector<QVector2D> ret = roads->graph[e]->getPolyLine();
@@ -486,7 +460,7 @@ std::vector<QVector2D> GraphUtil::getOrderedPolyLine(RoadGraph* roads, RoadEdgeD
 }
 
 /**
- * 指定したエッジについて、指定した頂点からpolyLineが並ぶように変更する。
+ * Sort the points of the polyline of the edge in such a way that the first point is the location of the src vertex.
  */
 void GraphUtil::orderPolyLine(RoadGraph* roads, RoadEdgeDesc e, RoadVertexDesc src) {
 	RoadVertexDesc tgt;
@@ -500,14 +474,14 @@ void GraphUtil::orderPolyLine(RoadGraph* roads, RoadEdgeDesc e, RoadVertexDesc s
 		tgt = s;
 	}
 
-	// 順序が逆なら、リバースする
+	// If the order is opposite, reverse the order.
 	if ((roads->graph[src]->getPt() - roads->graph[e]->getPolyLine()[0]).length() > (roads->graph[tgt]->getPt() - roads->graph[e]->getPolyLine()[0]).length()) {
 		std::reverse(roads->graph[e]->polyLine.begin(), roads->graph[e]->polyLine.end());
 	}
 }
 
 /**
- * 指定したエッジを、指定した位置に移動する。
+ * Move the edge to the specified location.
  */
 void GraphUtil::moveEdge(RoadGraph* roads, RoadEdgeDesc e, QVector2D& src_pos, QVector2D& tgt_pos) {
 	RoadVertexDesc src = boost::source(e, roads->graph);
@@ -534,7 +508,7 @@ void GraphUtil::moveEdge(RoadGraph* roads, RoadEdgeDesc e, QVector2D& src_pos, Q
 }
 
 /**
- * 全ての行き止まりエッジを削除する。
+ * Remove all the dead-end edges.
  */
 bool GraphUtil::removeDeadEnd(RoadGraph* roads) {
 	bool removed = false;
@@ -547,13 +521,13 @@ bool GraphUtil::removeDeadEnd(RoadGraph* roads) {
 			if (!roads->graph[*vi]->valid) continue;
 
 			if (getDegree(roads, *vi) == 1) {
-				// 全ての隣接エッジを無効にする（実際は、１個しかないはず）
+				// invalidate all the outing edges.
 				RoadOutEdgeIter ei, eend;
 				for (boost::tie(ei, eend) = boost::out_edges(*vi, roads->graph); ei != eend; ++ei) {
 					roads->graph[*ei]->valid = false;
 				}
 
-				// 当該頂点を無効にする
+				// invalidate the vertex as well.
 				roads->graph[*vi]->valid = false;
 
 				removedOne = true;
@@ -566,10 +540,9 @@ bool GraphUtil::removeDeadEnd(RoadGraph* roads) {
 }
 
 /**
- * ２つのpolyLineをinterpolateする。
- * 本実装は、簡易方式かも知れない。
- * ノード数が同じ場合は、順番にinterpolateするだけ。
- * ノード数が異なる場合は、polyLineを10個にdiscrete分割し、対応する２つの点をinterpolateする。
+ * Interpolate two polylines.
+ * If the number of nodes are same, just interpolate them one by one.
+ * Otherwise, discritize them into 10 points, and interpolate them one by one.
  */
 std::vector<QVector2D> GraphUtil::interpolateEdges(RoadGraph* roads1, RoadEdgeDesc e1, RoadVertexDesc src1, RoadGraph* roads2, RoadEdgeDesc e2, RoadVertexDesc src2, float t) {
 
@@ -590,7 +563,7 @@ std::vector<QVector2D> GraphUtil::interpolateEdges(RoadGraph* roads1, RoadEdgeDe
 		}
 	} else {
 		for (float index = 0.0f; index < 1.0f; index += 0.1f) {
-			// １つ目のpolyLineの、index番目の座標を計算
+			// compute the location of the index-th point of the 1st polyline.
 			int j1 = index * (float)(n1 - 1);
 
 			float s1 = index - (float)j1 / (float)(n1 - 1);
@@ -598,7 +571,7 @@ std::vector<QVector2D> GraphUtil::interpolateEdges(RoadGraph* roads1, RoadEdgeDe
 
 			QVector2D pt1 = polyLine1[j1] * t1 / (s1 + t1) + polyLine1[j1 + 1] * s1 / (s1 + t1);
 
-			// ２つ目のpolyLineの、index番目の座標を計算
+			// compute the location of the index-th point of the 2nd polyline.
 			int j2 = index * (float)(n2 - 1);
 
 			float s2 = index - (float)j2 / (float)(n2 - 1);
@@ -606,11 +579,11 @@ std::vector<QVector2D> GraphUtil::interpolateEdges(RoadGraph* roads1, RoadEdgeDe
 
 			QVector2D pt2 = polyLine2[j2] * t2 / (s2 + t2) + polyLine2[j2 + 1] * s2 / (s2 + t2);
 
-			// interpolateする
+			// interpolate
 			ret.push_back(pt1 * t + pt2 * (1.0f - t));
 		}
 
-		// 最後の点をinterpolateして追加する
+		// interpolate the last points
 		ret.push_back(polyLine1[polyLine1.size() - 1] * t + polyLine2[polyLine2.size() - 1] * (1.0f - t));
 	}
 
@@ -618,11 +591,11 @@ std::vector<QVector2D> GraphUtil::interpolateEdges(RoadGraph* roads1, RoadEdgeDe
 }
 
 /**
- * 道路網のエッジのImportanceを計算し、エッジのプロパティとして格納する。
- * 計算式：MAX( (w_length * length + w_valence * (valence1 + valence2) + w_lanes * lanes) / K, K / initial distance)
+ * Compute the importance of the edges.
+ * importance = MAX( (w_length * length + w_valence * (valence1 + valence2) + w_lanes * lanes) / K, K / initial distance)
  */
 void GraphUtil::computeImportanceOfEdges(RoadGraph* roads, float w_length, float w_valence, float w_lanes) {
-	// エッジの最大長を計算する
+	// compute the maximum length of the edges.
 	float max_length = 0.0f;
 	RoadEdgeIter ei, eend;
 	for (boost::tie(ei, eend) = boost::edges(roads->graph); ei != eend; ++ei) {
@@ -646,9 +619,9 @@ void GraphUtil::computeImportanceOfEdges(RoadGraph* roads, float w_length, float
 }
 
 /**
- * 道路網の２つのエッジの非類似性を計算して返却する。
+ * Return the dissimilarity of two road graphs.
  *
- * 計算式：２つの頂点の距離 + Angleの差 + Degreeの差 + レーン数の差
+ * dissimilarity = distance of two vertices + difference in angle of edges + difference in degrees + difference in lanes.
  */
 float GraphUtil::computeDissimilarityOfEdges(RoadGraph* roads1, RoadEdgeDesc e1, RoadGraph* roads2, RoadEdgeDesc e2) {
 	float w_distance = 0.001f;
@@ -662,13 +635,13 @@ float GraphUtil::computeDissimilarityOfEdges(RoadGraph* roads1, RoadEdgeDesc e1,
 	RoadVertexDesc src2 = boost::source(e2, roads2->graph);
 	RoadVertexDesc tgt2 = boost::target(e2, roads2->graph);
 
-	// src1とtgt2、tgt1とsrc2が近い場合、src2、tgt2を入れ替える
+	// if src1 and tgt2, tgt1 and src2 are close to each other, exchange src2 and tgt2.
 	if ((roads1->graph[src1]->pt - roads2->graph[src2]->pt).length() + (roads1->graph[tgt1]->pt - roads2->graph[tgt2]->pt).length() > (roads1->graph[src1]->pt - roads2->graph[tgt2]->pt).length() + (roads1->graph[tgt1]->pt - roads2->graph[src2]->pt).length()) {
 		src2 = boost::target(e2, roads2->graph);
 		tgt2 = boost::source(e2, roads2->graph);
 	}
 
-	// 各要素を計算
+	// compute each factor
 	float dist = (roads1->graph[src1]->pt - roads2->graph[src2]->pt).length() + (roads1->graph[tgt1]->pt - roads2->graph[tgt2]->pt).length();
 	float angle = diffAngle(roads1->graph[src1]->pt - roads1->graph[tgt1]->pt, roads2->graph[src2]->pt - roads2->graph[tgt2]->pt);
 	float degree = abs(getDegree(roads1, src1) - getDegree(roads2, src2)) + abs(getDegree(roads1, tgt1) - getDegree(roads2, tgt2));
@@ -678,7 +651,7 @@ float GraphUtil::computeDissimilarityOfEdges(RoadGraph* roads1, RoadEdgeDesc e1,
 }
 
 /**
- * 独立したエッジを削除する
+ * Remove the isolated edges.
  */
 void GraphUtil::removeIsolatedEdges(RoadGraph* roads, bool onlyValidEdge) {
 	RoadEdgeIter ei, eend;
@@ -697,9 +670,8 @@ void GraphUtil::removeIsolatedEdges(RoadGraph* roads, bool onlyValidEdge) {
 }
 
 /**
- * 道路網をコピー(deep copy)する。
- * 無効な頂点、エッジもコピーし、無効フラグをつけておく。
- * こうすることで、頂点IDなどが、全く同じグラフが出来上がるはず。
+ * Copy the road graph.
+ * Note: This function copies all the vertices and edges including the invalid ones. Thus, their IDs will be preserved.
  */
 RoadGraph* GraphUtil::copyRoads(RoadGraph* roads) {
 	RoadGraph* new_roads = new RoadGraph();
@@ -707,7 +679,7 @@ RoadGraph* GraphUtil::copyRoads(RoadGraph* roads) {
 	QMap<RoadVertexDesc, RoadVertexDesc> conv;
 	RoadVertexIter vi, vend;
 	for (boost::tie(vi, vend) = boost::vertices(roads->graph); vi != vend; ++vi) {
-		// 道路の追加
+		// Add a vertex
 		RoadVertex* new_v = new RoadVertex(roads->graph[*vi]->getPt());
 		new_v->valid = roads->graph[*vi]->valid;
 		RoadVertexDesc new_v_desc = boost::add_vertex(new_roads->graph);
@@ -724,7 +696,7 @@ RoadGraph* GraphUtil::copyRoads(RoadGraph* roads) {
 		RoadVertexDesc new_src = conv[src];
 		RoadVertexDesc new_tgt = conv[tgt];
 
-		// エッジの追加
+		// Add an edge
 		RoadEdge* new_e = new RoadEdge(*roads->graph[*ei]);
 		std::pair<RoadEdgeDesc, bool> edge_pair = boost::add_edge(new_src, new_tgt, new_roads->graph);
 		new_roads->graph[edge_pair.first] = new_e;
@@ -734,9 +706,8 @@ RoadGraph* GraphUtil::copyRoads(RoadGraph* roads) {
 }
 
 /**
- * roads1をroads2にコピーする
- * 無効な頂点、エッジもコピーし、無効フラグをつけておく。
- * こうすることで、頂点IDなどが、全く同じグラフが出来上がるはず。
+ * Copy the road graph.
+ * Note: This function copies all the vertices and edges including the invalid ones. Thus, their IDs will be preserved.
  */
 void GraphUtil::copyRoads(RoadGraph* roads1, RoadGraph* roads2) {
 	roads2->clear();
@@ -744,7 +715,7 @@ void GraphUtil::copyRoads(RoadGraph* roads1, RoadGraph* roads2) {
 	QMap<RoadVertexDesc, RoadVertexDesc> conv;
 	RoadVertexIter vi, vend;
 	for (boost::tie(vi, vend) = boost::vertices(roads1->graph); vi != vend; ++vi) {
-		// 道路の追加
+		// Add a vertex
 		RoadVertex* new_v = new RoadVertex(roads1->graph[*vi]->getPt());
 		new_v->valid = roads1->graph[*vi]->valid;
 		RoadVertexDesc new_v_desc = boost::add_vertex(roads2->graph);
@@ -761,7 +732,7 @@ void GraphUtil::copyRoads(RoadGraph* roads1, RoadGraph* roads2) {
 		RoadVertexDesc new_src = conv[src];
 		RoadVertexDesc new_tgt = conv[tgt];
 
-		// エッジの追加
+		// Add an edge
 		RoadEdge* new_e = new RoadEdge(*roads1->graph[*ei]);
 		std::pair<RoadEdgeDesc, bool> edge_pair = boost::add_edge(new_src, new_tgt, roads2->graph);
 		roads2->graph[edge_pair.first] = new_e;
@@ -769,8 +740,7 @@ void GraphUtil::copyRoads(RoadGraph* roads1, RoadGraph* roads2) {
 }
 
 /**
- * 道路網のAxis Alignedバウンディングボックスを返却する。
- * バウンディングボックスは、XY軸にalignされたボックスを使う。
+ * Return the axix aligned bounding box of the road graph.
  */
 BBox GraphUtil::getAABoundingBox(RoadGraph* roads) {
 	BBox box;
@@ -786,12 +756,11 @@ BBox GraphUtil::getAABoundingBox(RoadGraph* roads) {
 }
 
 /**
- * 道路網のバウンディングボックスを返却する。
+ * Return the bounding box of the road graph.
  * 
- * XY軸にalignされていないボックスも含めて、面積が最小となるものを探す。
- * 実際には、道路網を-90度から+90度まで、5度ずつ回転させ、Axis Alignedバウンディングボックスを計算し、
- * 最も面積の小さいものを選択する。
- * 注意：道路網は、回転させた結果の道路網に更新される！
+ * The bounding box is not necessarily aligned to X/Y-axis.
+ * Algorithm: Rotate the road graph from -90 degree to 90 degree by 5 degree per step, compute the axix aligned bounding box, and find the minimum one in terms of its area.
+ * The raod graph is updated to be rotated based on the bounding box in the end.
  */
 BBox GraphUtil::getBoudingBox(RoadGraph* roads, float theta1, float theta2, float theta_step) {
 	float min_area = std::numeric_limits<float>::max();
@@ -816,8 +785,8 @@ BBox GraphUtil::getBoudingBox(RoadGraph* roads, float theta1, float theta2, floa
 }
 
 /**
- * 道路網から、メイン道路だけを抽出し、新たな道路網を作成する。（スケルトンのイメージ）
- * removeフラグがtrueなら、抽出したエッジは、元の道路網ではinvalidにする。
+ * Extract major roads from the road graph.
+ * If remove is true, the extracted edges are removed from the original road graph, i.e. their "valid" flags become false.
  */
 RoadGraph* GraphUtil::extractMajorRoad(RoadGraph* roads, bool remove) {
 	float max_length = 0.0f;
@@ -837,13 +806,13 @@ RoadGraph* GraphUtil::extractMajorRoad(RoadGraph* roads, bool remove) {
 
 	QMap<RoadVertexDesc, RoadVertexDesc> conv;
 
-	// メイン道路１本の道路網を生成する
+	// Generate a road graph with one main road segment.
 	RoadGraph* new_roads = new RoadGraph();
 	for (QList<RoadEdgeDesc>::iterator it = max_path.begin(); it != max_path.end(); ++it) {
 		RoadVertexDesc src = boost::source(*it, roads->graph);
 		RoadVertexDesc tgt = boost::target(*it, roads->graph);
 
-		// src頂点に対応する頂点を取得、または、作成する
+		// Retrieve the corresponding vertex to src.
 		RoadVertexDesc new_src;
 		if (conv.contains(src)) {
 			new_src = conv[src];
@@ -854,7 +823,7 @@ RoadGraph* GraphUtil::extractMajorRoad(RoadGraph* roads, bool remove) {
 			conv[src] = new_src;
 		}
 
-		// tgt頂点に対応する頂点を取得、または、作成する
+		// Retrieve the corresponding vertex to tgt.
 		RoadVertexDesc new_tgt;
 		if (conv.contains(tgt)) {
 			new_tgt = conv[tgt];
@@ -865,12 +834,12 @@ RoadGraph* GraphUtil::extractMajorRoad(RoadGraph* roads, bool remove) {
 			conv[tgt] = new_tgt;
 		}
 
-		// エッジを作成する
+		// Add an edge
 		RoadEdgeDesc e = getEdge(roads, src, tgt);
 		addEdge(new_roads, new_src, new_tgt, roads->graph[e]->lanes, roads->graph[e]->type, roads->graph[e]->oneWay);
 
 		if (remove) {
-			// 元の道路網からエッジを削除する
+			// remove the edge from the original road graph.
 			roads->graph[e]->valid = false;
 		}
 	}
@@ -879,7 +848,7 @@ RoadGraph* GraphUtil::extractMajorRoad(RoadGraph* roads, bool remove) {
 }
 
 /**
- * 道路網のあるエッジからスタートし、最もまっすぐな道を返却する。
+ * Extract the longest straight road segment that starts from "root".
  */
 float GraphUtil::extractMajorRoad(RoadGraph* roads, RoadEdgeDesc root, QList<RoadEdgeDesc>& path) {
 	path.clear();
@@ -916,7 +885,7 @@ float GraphUtil::extractMajorRoad(RoadGraph* roads, RoadEdgeDesc root, QList<Roa
 		RoadEdgeDesc min_e;
 		float len;
 
-		// 当該頂点の隣接頂点について
+		// For each neighbor
 		RoadOutEdgeIter ei, eend;
 		for (boost::tie(ei, eend) = boost::out_edges(v, roads->graph); ei != eend; ++ei) {
 			if (!roads->graph[*ei]->valid) continue;
@@ -924,7 +893,7 @@ float GraphUtil::extractMajorRoad(RoadGraph* roads, RoadEdgeDesc root, QList<Roa
 			RoadVertexDesc u = boost::target(*ei, roads->graph);
 			if (!roads->graph[u]->valid) continue;
 
-			// 訪問済みの頂点はスキップ
+			// Skip the node if it is already visited.
 			if (visited.contains(u)) continue;
 
 			QVector2D dir2 = roads->graph[u]->getPt() - roads->graph[v]->getPt();
@@ -939,7 +908,7 @@ float GraphUtil::extractMajorRoad(RoadGraph* roads, RoadEdgeDesc root, QList<Roa
 			}
 		}
 
-		// 角度20度以内なら、まっすぐな道とみなす
+		// If the angle is less than 20 degree, consider it as straight.
 		if (min_diff_angle < M_PI * 20.0f / 180.0f) {
 			path.push_back(min_e);
 			length += len;
@@ -954,7 +923,7 @@ float GraphUtil::extractMajorRoad(RoadGraph* roads, RoadEdgeDesc root, QList<Roa
 }
 
 /**
- * 頂点vの隣接ノードのリストを返却する
+ * Return the neighbors of the specified vertex.
  */
 std::vector<RoadVertexDesc> GraphUtil::getNeighbors(RoadGraph* roads, RoadVertexDesc v, bool onlyValidVertex) {
 	std::vector<RoadVertexDesc> neighbors;
@@ -984,26 +953,7 @@ bool GraphUtil::isNeighbor(RoadGraph* roads, RoadVertexDesc v1, RoadVertexDesc v
 }
 
 /**
- * srcからtgtに到達可能かどうかチェックする。
- */
-/*
-bool GraphUtil::isReachable(RoadGraph* roads, RoadVertexDesc src, RoadVertexDesc tgt) {
-	std::vector<boost::default_color_type> color(boost::num_vertices(roads->graph), boost::white_color);
-	return boost::is_reachable(src, tgt, roads->graph, color.data());
-}
-*/
-
-/**
- * ２つの頂点が直接接続されているか、チェックする。
- * ２つの頂点が同じ頂点の場合も、trueを返却する。
- */
-bool GraphUtil::isDirectlyConnected(RoadGraph* roads, RoadVertexDesc desc1, RoadVertexDesc desc2, bool onlyValidEdge) {
-	if (desc1 == desc2) return true;
-	return hasEdge(roads, desc1, desc2, onlyValidEdge);
-}
-
-/**
- * desc1とdesc2が、１個、または、複数個のエッジによって接続されているかチェックする。
+ * Check if desc2 is reachable from desc1.
  */
 bool GraphUtil::isConnected(RoadGraph* roads, RoadVertexDesc desc1, RoadVertexDesc desc2, bool onlyValidEdge) {
 	QList<RoadVertexDesc> seeds;
@@ -1035,7 +985,7 @@ bool GraphUtil::isConnected(RoadGraph* roads, RoadVertexDesc desc1, RoadVertexDe
 }
 
 /**
- * 対象グラフの中から、指定した点に最も近い頂点descを返却する。
+ * Find the closest vertex from the specified point.
  */
 RoadVertexDesc GraphUtil::findNearestVertex(RoadGraph* roads, const QVector2D &pt) {
 	RoadVertexDesc nearest_desc;
@@ -1056,8 +1006,8 @@ RoadVertexDesc GraphUtil::findNearestVertex(RoadGraph* roads, const QVector2D &p
 }
 
 /**
- * 対象グラフの中から、指定した点に最も近い頂点descを返却する。
- * ただし、ignore頂点は、検索対象から外す。
+ * Find the closest vertex from the specified point.
+ * The vertex "ignore" is ignored.
  */
 RoadVertexDesc GraphUtil::findNearestVertex(RoadGraph* roads, const QVector2D &pt, RoadVertexDesc ignore) {
 	RoadVertexDesc nearest_desc;
@@ -1120,8 +1070,8 @@ RoadVertexDesc GraphUtil::findConnectedNearestNeighbor(RoadGraph* roads, const Q
 }
 
 /**
- * 指定された点に最も近いエッジを返却する。
- * ただし、指定された距離より通り場合は、falseを返却する。
+ * Find the vertex which is the closest to the specified point.
+ * If the distance is within the threshold, return true. Otherwise, return false.
  */
 bool GraphUtil::getEdge(RoadGraph* roads, const QVector2D &pt, float threshold, RoadEdgeDesc& e, bool onlyValidEdge) {
 	float min_dist = std::numeric_limits<float>::max();
@@ -1183,22 +1133,7 @@ RoadEdgeDesc GraphUtil::findNearestEdge(RoadGraph* roads, RoadVertexDesc v, floa
 }
 
 /**
- * 親子関係の木構造に基づいて、指定した頂点の子ノードリストを返却する。
- */
-std::vector<RoadVertexDesc> GraphUtil::getChildren(RoadGraph* roads, RoadVertexDesc v) {
-	std::vector<RoadVertexDesc> ret;
-
-	for (QMap<RoadVertexDesc, RoadVertexDesc>::iterator it = roads->childrenToParent.begin(); it != roads->childrenToParent.end(); ++it) {
-		if (it.value() == v) {
-			ret.push_back(it.key());
-		}
-	}
-
-	return ret;
-}
-
-/**
- * 無効頂点やエッジを全て削除する。
+ * Clean the road graph by removing all the invalid vertices and edges.
  */
 void GraphUtil::clean(RoadGraph* roads) {
 	RoadGraph* temp = GraphUtil::copyRoads(roads);
@@ -1210,7 +1145,7 @@ void GraphUtil::clean(RoadGraph* roads) {
 	for (boost::tie(vi, vend) = boost::vertices(temp->graph); vi != vend; ++vi) {
 		if (!temp->graph[*vi]->valid) continue;
 
-		// 道路の追加
+		// Add a vertex
 		RoadVertex* new_v = new RoadVertex(temp->graph[*vi]->getPt());
 		RoadVertexDesc new_v_desc = boost::add_vertex(roads->graph);
 		roads->graph[new_v_desc] = new_v;	
@@ -1228,7 +1163,7 @@ void GraphUtil::clean(RoadGraph* roads) {
 		RoadVertexDesc new_src = conv[src];
 		RoadVertexDesc new_tgt = conv[tgt];
 
-		// エッジの追加
+		// Add an edge
 		RoadEdge* new_e = new RoadEdge(*temp->graph[*ei]);
 		std::pair<RoadEdgeDesc, bool> edge_pair = boost::add_edge(new_src, new_tgt, roads->graph);
 		roads->graph[edge_pair.first] = new_e;
@@ -1236,7 +1171,7 @@ void GraphUtil::clean(RoadGraph* roads) {
 }
 
 /**
- * degreeが２の頂点を削除し、エッジの一部にする。
+ * Remove the vertices of degree of 2, and make it as a part of an edge.
  */
 void GraphUtil::reduce(RoadGraph* roads) {
 	// reduce the graph by removing the vertices which have two outing edges.
@@ -1261,7 +1196,7 @@ void GraphUtil::reduce(RoadGraph* roads) {
 }
 
 /**
- * degreeが２の指定された頂点を削除し、エッジの一部にする。
+ * Remove the vertex of degree 2, and make it as a part of an edge.
  */
 bool GraphUtil::reduce(RoadGraph* roads, RoadVertexDesc desc) {
 	int count = 0;
@@ -1282,7 +1217,7 @@ bool GraphUtil::reduce(RoadGraph* roads, RoadVertexDesc desc) {
 	//if (edges[0]->getType() != edges[1]->getType()) return false;
 	//if (edges[0]->lanes != edges[1]->lanes) return false;
 
-	// 三角形の形をしている場合、degreeが2でもreduceしない
+	// If the vertices form a triangle, don't remove it.
 	if (hasEdge(roads, vd[0], vd[1])) return false;
 
 	RoadEdge* new_edge = new RoadEdge(edges[0]->oneWay, edges[0]->lanes, edges[0]->type);
@@ -1298,11 +1233,11 @@ bool GraphUtil::reduce(RoadGraph* roads, RoadVertexDesc desc) {
 	std::pair<RoadEdgeDesc, bool> edge_pair = boost::add_edge(vd[0], vd[1], roads->graph);
 	roads->graph[edge_pair.first] = new_edge;
 
-	// 古いエッジを無効にする
+	// invalidate the old edge
 	roads->graph[ed[0]]->valid = false;
 	roads->graph[ed[1]]->valid = false;
 
-	// 当該頂点を無効にする
+	// invalidate the vertex
 	roads->graph[desc]->valid = false;
 
 	return true;
@@ -1327,22 +1262,22 @@ void GraphUtil::simplify(RoadGraph* roads, float dist_threshold) {
 			roads->graph[*vi]->pt = pt;
 		}
 
-		// 当該頂点に最も近いエッジを探す
+		// find the closest vertex
 		QVector2D closestPt;
 		float dist;
 		RoadEdgeDesc e = GraphUtil::findNearestEdge(roads, *vi, dist, closestPt);
 		if (dist < dist_threshold) {
-			// 当該頂点を、エッジ上の点に移動する
+			// move the vertex to the closest point on the edge
 			GraphUtil::moveVertex(roads, *vi, closestPt);
 
-			// 当該エッジの両端頂点を取得
+			// retrieve src and tgt of the edge
 			RoadVertexDesc src = boost::source(e, roads->graph);
 			RoadVertexDesc tgt = boost::target(e, roads->graph);
 
-			// 当該エッジを無効にする
+			// invalidate the edge
 			roads->graph[e]->valid = false;
 
-			// エッジの付け替え
+			// update the edge
 			if (!GraphUtil::hasEdge(roads, src, *vi)) {
 				addEdge(roads, src, *vi, roads->graph[e]->lanes, roads->graph[e]->type, roads->graph[e]->oneWay);
 			}
@@ -1362,7 +1297,7 @@ void GraphUtil::normalize(RoadGraph* roads) {
 		if (!roads->graph[*ei]->valid) continue;
 		if (roads->graph[*ei]->getPolyLine().size() <= 2) continue;
 
-		// 当該エッジを無効にする
+		// invalidate the edge
 		roads->graph[*ei]->valid = false;
 
 		RoadVertexDesc src = boost::source(*ei, roads->graph);
@@ -1379,18 +1314,18 @@ void GraphUtil::normalize(RoadGraph* roads) {
 		}
 
 		for (int i = 1; i < roads->graph[*ei]->getPolyLine().size() - 1; i++) {
-			// 中間点をノードとして登録
+			// add all the points along the poly line as vertices
 			RoadVertex* new_v = new RoadVertex(roads->graph[*ei]->getPolyLine()[i]);
 			RoadVertexDesc new_v_desc = boost::add_vertex(roads->graph);
 			roads->graph[new_v_desc] = new_v;
 
-			// エッジを作成
+			// Add an edge
 			addEdge(roads, prev_desc, new_v_desc, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
 
 			prev_desc = new_v_desc;
 		}
 
-		// 最後のエッジを作成
+		// Add the last edge
 		addEdge(roads, prev_desc, last_desc, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
 	}
 }
@@ -1422,7 +1357,7 @@ void GraphUtil::singlify(RoadGraph* roads) {
 
 	QMap<RoadVertexDesc, RoadVertexDesc> conv;
 
-	// スタート頂点を追加
+	// Add the starting vertex
 	RoadVertex* new_v = new RoadVertex(roads->graph[start]->getPt());
 	RoadVertexDesc new_v_desc = boost::add_vertex(new_roads->graph);
 	new_roads->graph[new_v_desc] = new_v;
@@ -1452,13 +1387,13 @@ void GraphUtil::singlify(RoadGraph* roads) {
 			if (conv.contains(u_desc)) {
 				new_u_desc = conv[u_desc];
 			} else {
-				// 新しいノードを作成する。
+				// Add a vertex
 				RoadVertex* new_u = new RoadVertex(roads->graph[u_desc]->getPt());
 				new_u_desc = boost::add_vertex(new_roads->graph);
 				new_roads->graph[new_u_desc] = new_u;
 			}
 
-			// エッジを作成する。
+			// Add an edge
 			if (!hasEdge(new_roads, new_v_desc, new_u_desc)) {
 				addEdge(new_roads, new_v_desc, new_u_desc, roads->graph[*oei]);
 			}
@@ -1471,13 +1406,13 @@ void GraphUtil::singlify(RoadGraph* roads) {
 		}
 	}
 
-	// new_roads を roads にコピーする
+	// copy new_roads to roads
 	copyRoads(new_roads, roads);
 	delete new_roads;
 }
 
 /**
- * 道路網をplanarグラフにする。
+ * Convert the road graph to a planar graph.
  */
 void GraphUtil::planarify(RoadGraph* roads) {
 	bool split = true;
@@ -1488,8 +1423,8 @@ void GraphUtil::planarify(RoadGraph* roads) {
 }
 
 /**
- * 道路網の交差を、１つ修正し、trueを返却する。
- * 交差が１つもない場合は、falseを返却する。
+ * Convert one intersected road segments to a planar one by adding the intersection, and return true.
+ * If the road segments do not intersect, return false.
  */
 bool GraphUtil::planarifyOne(RoadGraph* roads) {
 	RoadEdgeIter ei, eend;
@@ -1578,12 +1513,10 @@ void GraphUtil::skeltonize(RoadGraph* roads) {
 }
 
 /**
- * 道路網をtheta [rad] 回転する
- *
- * 無効の頂点、エッジも、とりあえず回転しておく。
+ * Rotate the road graph by theta [rad].
  */
 void GraphUtil::rotate(RoadGraph* roads, float theta) {
-	// 頂点を回転する
+	// Rotate vertices
 	RoadVertexIter vi, vend;
 	for (boost::tie(vi, vend) = boost::vertices(roads->graph); vi != vend; ++vi) {
 		QVector2D pos = roads->graph[*vi]->pt;
@@ -1592,7 +1525,7 @@ void GraphUtil::rotate(RoadGraph* roads, float theta) {
 		roads->graph[*vi]->pt.setY(sinf(theta) * pos.x() + cosf(theta) * pos.y());
 	}
 
-	// エッジを回転する
+	// Rotate edges
 	RoadEdgeIter ei, eend;
 	for (boost::tie(ei, eend) = boost::edges(roads->graph); ei != eend; ++ei) {
 		for (int i = 0; i < roads->graph[*ei]->polyLine.size(); i++) {
@@ -1604,18 +1537,16 @@ void GraphUtil::rotate(RoadGraph* roads, float theta) {
 }
 
 /**
- * 道路網を移動する
- *
- * 無効の頂点、エッジも、とりあえず移動しておく。
+ * Translate the road graph.
  */
 void GraphUtil::translate(RoadGraph* roads, QVector2D offset) {
-	// 頂点を移動する
+	// Translate vertices
 	RoadVertexIter vi, vend;
 	for (boost::tie(vi, vend) = boost::vertices(roads->graph); vi != vend; ++vi) {
 		roads->graph[*vi]->pt += offset;
 	}
 
-	// エッジを移動する
+	// Translate edges
 	RoadEdgeIter ei, eend;
 	for (boost::tie(ei, eend) = boost::edges(roads->graph); ei != eend; ++ei) {
 		for (int i = 0; i < roads->graph[*ei]->polyLine.size(); i++) {
@@ -1913,7 +1844,7 @@ void GraphUtil::normalizeBySpring(RoadGraph* roads, BBox& area) {
 }
 
 /**
- * 頂点AB間に複数のエッジがある場合、１つ目以外は無効にする。
+ * Remove duplicated edges if there are more than one edges between two vertices.
  */
 bool GraphUtil::removeDuplicateEdges(RoadGraph* roads) {
 	bool removed = false;
@@ -1943,10 +1874,9 @@ bool GraphUtil::removeDuplicateEdges(RoadGraph* roads) {
 }
 
 /**
- * Deadendのエッジについて、近くに頂点がある場合は、Snapさせる。
- * まず、degree>1の頂点のみを対象として、最も近い頂点を探す。
- * もし存在しない場合は、degree=1の頂点のみを対象として、最も近い頂点を探す。
- * ただし、Snap対象となるエッジとのなす角度がmin_angle_threshold以下の場合は、対象外。
+ * snap the dead-end edges to the near vertices.
+ * First, for vertices of degree more than 1, find the closest vertex.
+ * If no such vertex exists, for vertices of degree 1, find the cloest vertex.
  */
 void GraphUtil::snapDeadendEdges(RoadGraph* roads, float threshold) {
 	float min_angle_threshold = 0.34f;
@@ -1955,10 +1885,10 @@ void GraphUtil::snapDeadendEdges(RoadGraph* roads, float threshold) {
 	for (boost::tie(vi, vend) = boost::vertices(roads->graph); vi != vend; ++vi) {
 		if (!roads->graph[*vi]->valid) continue;
 
-		// degreeが1の頂点以外は、対象外
+		// only for the vertices of degree more than 1
 		if (GraphUtil::getDegree(roads, *vi) != 1) continue;
 
-		// 当該頂点と接続されている唯一の頂点を取得
+		// retrieve the tgt vertex
 		RoadVertexDesc tgt;
 		RoadEdgeDesc e_desc;
 		RoadOutEdgeIter ei, eend;
@@ -1970,7 +1900,7 @@ void GraphUtil::snapDeadendEdges(RoadGraph* roads, float threshold) {
 			break;
 		}
 
-		// 近接頂点を探す（ただし、degree=1の頂点は、対象外）
+		// find the closest vertex
 		RoadVertexDesc nearest_desc;
 		float min_dist = std::numeric_limits<float>::max();
 
@@ -2007,7 +1937,7 @@ void GraphUtil::snapDeadendEdges(RoadGraph* roads, float threshold) {
 			if (min_angle < min_angle_threshold) continue;
 		}
 
-		// 見つからない場合は、degree=1の頂点の中から、最も近い頂点を探す
+		// If no such vertex exists, find the closest vertex of degree 1.
 		if (min_dist > threshold) {
 			for (boost::tie(vi2, vend2) = boost::vertices(roads->graph); vi2 != vend2; ++vi2) {
 				if (!roads->graph[*vi2]->valid) continue;
@@ -2015,7 +1945,7 @@ void GraphUtil::snapDeadendEdges(RoadGraph* roads, float threshold) {
 				if (*vi2 == tgt) continue;
 				if (GraphUtil::getDegree(roads, *vi2) != 1) continue;
 
-				// 最も近い頂点の、唯一のエッジを探す
+				// Find the edge of the vertex
 				RoadEdgeDesc e_desc2;
 				RoadOutEdgeIter ei, eend;
 				for (boost::tie(ei, eend) = boost::out_edges(*vi2, roads->graph); ei != eend; ++ei) {
@@ -2025,7 +1955,7 @@ void GraphUtil::snapDeadendEdges(RoadGraph* roads, float threshold) {
 					break;
 				}
 
-				// 最も近い頂点のエッジが短すぎる場合は、スキップ
+				// If th edge is too short, skip it.
 				//if (roads->graph[e_desc2]->getLength() < deadend_removal_threshold) continue;
 
 				float dist = (roads->graph[*vi2]->pt - roads->graph[*vi]->pt).length();
@@ -2144,8 +2074,7 @@ void GraphUtil::snapDeadendEdges2(RoadGraph* roads, int degree, float threshold)
 }
 
 /**
- * 短すぎるDeadendエッジを削除する。
- * ただし、完全マッチングの相手がいるエッジは、削除しない。
+ * Remove too short dead-end edges unless it has a pair.
  */
 void GraphUtil::removeShortDeadend(RoadGraph* roads, float threshold) {
 	bool deleted = true;
@@ -2162,12 +2091,12 @@ void GraphUtil::removeShortDeadend(RoadGraph* roads, float threshold) {
 			for (boost::tie(ei, eend) = boost::out_edges(*vi, roads->graph); ei != eend; ++ei) {
 				if (!roads->graph[*ei]->valid) continue;
 
-				// 完全マッチングの相手がいるエッジは、削除しない
+				// If the edge has a pair, don't remove it.
 				if (roads->graph[*ei]->fullyPaired) continue;
 
 				RoadVertexDesc tgt = boost::target(*ei, roads->graph);
 
-				// 短すぎるエッジを無効にし、degree=1の側の頂点を無効にする
+				// invalidate the too short edge, and invalidate the dead-end vertex.
 				if (roads->graph[*ei]->getLength() < threshold) {
 					roads->graph[*vi]->valid = false;
 					roads->graph[*ei]->valid = false;
@@ -2257,7 +2186,7 @@ float GraphUtil::normalizeAngle(float angle) {
 }
 
 /**
- * 角度の差を、[0, PI]の範囲で返却する。
+ * Compute the difference in angle that is normalized in the range of [0, PI].
  */
 float GraphUtil::diffAngle(const QVector2D& dir1, const QVector2D& dir2) {
 	float ang1 = atan2f(dir1.y(), dir1.x());
@@ -2267,95 +2196,10 @@ float GraphUtil::diffAngle(const QVector2D& dir1, const QVector2D& dir2) {
 }
 
 /**
- * 角度の差を、[0, PI]の範囲で返却する。
+ * Compute the difference in angle that is normalized in the range of [0, PI].
  */
 float GraphUtil::diffAngle(float angle1, float angle2) {
 	return fabs(normalizeAngle(angle1 - angle2));
-}
-
-/**
- * ２つの道路網のトポロジーの違いの最小値を数値化して返却する。
- * トポロジーの違いなので、座標は一切関係ない。隣接ノードとの接続性のみを考慮する。
- */
-float GraphUtil::computeMinUnsimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadVertexDesc>& best_map1, RoadGraph* roads2, QMap<RoadVertexDesc, RoadVertexDesc>& best_map2) {
-	int N = getNumVertices(roads1);
-	int M = getNumVertices(roads2);
-
-	roads1->computeConnectivities();
-	roads2->computeConnectivities();
-
-	std::vector<int> corr1;
-	//std::vector<int> corr2;
-	for (int i = 0; i < N; i++) {
-		corr1.push_back(0);
-	}
-	/*
-	for (int i = 0; i < M; i++) {
-		corr2.push_back(0);
-	}
-	*/
-
-	float min_diff = std::numeric_limits<float>::max();
-	std::vector<int> min_corr1;
-	std::vector<int> min_corr2;
-
-	while (true) {
-		QMap<RoadVertexDesc, RoadVertexDesc> map1;
-		QMap<RoadVertexDesc, RoadVertexDesc> map2;
-
-		// corr1、corr2を元に、mapを生成する
-		for (int i = 0; i < N; i++) {
-			map1[i] = corr1[i];
-			map2[map1[i]] = i;
-		}
-
-		// map2で相手のいないノードについて、
-		/*
-		bool updated = true;
-		while (updated) {
-			updated = false;
-
-			RoadVertexIter vi, vend;
-			for (boost::tie(vi, vend) = boost::vertices(roads2->graph); vi != vend; ++vi) {
-				if (map2.contains(*vi)) continue;
-
-				// 最も近い隣接ノードを探す
-				float min_dist = std::numeric_limits<float>::max();	
-				RoadVertexDesc min_tgt;
-				RoadOutEdgeIter ei, eend;
-				for (boost::tie(ei, eend) = boost::out_edges(*vi, roads2->graph); ei != eend; ++ei) {
-					RoadVertexDesc tgt = boost::target(*ei, roads2->graph);
-					if (!map2.contains(tgt)) continue;
-
-					float dist = roads2->graph[*ei]->getLength();
-					if (dist < min_dist) {
-						min_dist = dist;
-						min_tgt = tgt;
-					}
-				}
-
-				// 隣接ノードの相手を、当該ノード(*vi)の相手とする
-				if (min_dist < std::numeric_limits<float>::max()) {
-					map2[*vi] = map2[min_tgt];
-					updated = true;
-					break;
-				}
-			}
-		}
-		*/
-
-		// 与えられたマッピングについて、非類似度を計算する
-		float diff = computeDissimilarity(roads1, map1, roads2, map2, 1.0f, 1.0f, 1.0f, 1.0f);
-		if (diff < min_diff) {
-			min_diff = diff;
-			best_map1 = map1;
-			best_map2 = map2;
-		}
-		
-		if (!nextSequence(corr1, M)) break;
-	}
-
-	return min_diff;
 }
 
 /**
@@ -2525,13 +2369,13 @@ float GraphUtil::computeDissimilarity2(RoadGraph* roads1, QMap<RoadVertexDesc, R
 }
 
 /**
- * ２つの道路網の類似度を計算して返却する。
+ * Return the similarity of two road graphs.
  */
 float GraphUtil::computeSimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadVertexDesc>& map1, RoadGraph* roads2, QMap<RoadVertexDesc, RoadVertexDesc>& map2, float w_connectivity, float w_angle) {
 	float score = 0.0f;
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
-	// 道路網１の各エッジについて、対応エッジがある場合、スコアを追加
+	// For each edge of the 1st road graph, if there is a corresponding edge, increase the score.
 	RoadEdgeIter ei, eend;
 	for (boost::tie(ei, eend) = boost::edges(roads1->graph); ei != eend; ++ei) {
 		if (!roads1->graph[*ei]->valid) continue;
@@ -2543,18 +2387,18 @@ float GraphUtil::computeSimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadV
 			RoadVertexDesc src2 = map1[src1];
 			RoadVertexDesc tgt2 = map1[tgt1];
 
-			// 対応エッジがあるので、スコアを追加
+			// increase the score
 			//score += roads1->graph[*ei]->importance;
 			score += w_connectivity;
 
-			// 角度の差に基づいて、スコアを追加
+			// increase the score according to the difference in the angle of the edges.
 			float angle = diffAngle(roads1->graph[tgt1]->pt - roads1->graph[src1]->pt, roads2->graph[tgt2]->pt - roads2->graph[src2]->pt);
 			score += (M_PI - angle) / M_PI * w_angle;
 		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
-	// 道路網２の各エッジについて、対応エッジがある場合、スコアを追加
+	// For each edge of the 2nd road graph, if there is a corresponding edge, increase the score.
 	for (boost::tie(ei, eend) = boost::edges(roads2->graph); ei != eend; ++ei) {
 		if (!roads2->graph[*ei]->valid) continue;
 
@@ -2565,11 +2409,11 @@ float GraphUtil::computeSimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadV
 			RoadVertexDesc src1 = map2[src2];
 			RoadVertexDesc tgt1 = map2[tgt2];
 
-			// 対応エッジがあるので、スコアを追加
+			// increase the score
 			//score += roads2->graph[*ei]->importance;
 			score += w_connectivity;
 
-			// 角度の差に基づいて、スコアを追加
+			// increase the score according to the difference in the angle of the edges.
 			float angle = diffAngle(roads1->graph[tgt1]->pt - roads1->graph[src1]->pt, roads2->graph[tgt2]->pt - roads2->graph[src2]->pt);
 			score += (M_PI - angle) / M_PI * w_angle;
 		}
@@ -2626,9 +2470,9 @@ void GraphUtil::findCorrespondenceByNearestNeighbor(RoadGraph* roads1, RoadGraph
 }
 
 /**
- * ２つの対応するノードについて、その子ノードのベストマッチングを探す。
- * アルゴリズム：角度の差の最大値を最小とする組合せを探す。
- * ただし、degreeが6を超えると、計算量が爆発するので、ループ数を1000に制約する。
+ * For two corresponding nodes, find the matching of outing edges.
+ * Algorithm: minimize the maximum of the difference in angle of two corresponding edges.
+ * If the degree is more than 6, the computation time will explode. Therefore, we should use an alternative approximation instead.
  */
 QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findCorrespondentEdges(RoadGraph* roads1, RoadVertexDesc parent1, std::vector<RoadVertexDesc> children1, RoadGraph* roads2, RoadVertexDesc parent2, std::vector<RoadVertexDesc> children2) {
 	if (children1.size() > 6 || children2.size() > 6) {
@@ -2646,7 +2490,7 @@ QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findCorrespondentEdges(RoadGraph
 		}
 
 		for (int count = 0; count < 50000; count++) {
-			// 角度の差の最大値を求める
+			// find the maximum of the difference in angle
 			float diff = 0.0f;
 			for (int i = 0; i < children1.size(); i++) {
 				RoadEdgeDesc e1 = getEdge(roads1, parent1, children1[i]);
@@ -2690,7 +2534,7 @@ QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findCorrespondentEdges(RoadGraph
 		}
 
 		for (int count = 0; count < 50000; count++) {
-			// 角度の差の最大値を求める
+			// find the maximum of difference in angle
 			float diff = 0.0f;
 			for (int i = 0; i < children2.size(); i++) {
 				RoadEdgeDesc e1 = getEdge(roads1, parent1, children1[permutation[i]]);
@@ -2732,8 +2576,8 @@ QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findCorrespondentEdges(RoadGraph
 }
 
 /**
- * ２つの対応するノードについて、その子ノードのベストマッチングを探す。
- * アルゴリズム：角度の差が最も近いペアを抽出する。以降、どちらかの子ノードがなくなるまで、繰り返す。
+ * For two corresponding nodes, find the matching of outing edges.
+ * Algorithm: This is an approximation algorithm. Find the most similar pair of edges in terms of their angles, and make the a pair. Keep this process until there is no edge in one of the children lists.
  */
 QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findApproximateCorrespondentEdges(RoadGraph* roads1, RoadVertexDesc parent1, std::vector<RoadVertexDesc> children1, RoadGraph* roads2, RoadVertexDesc parent2, std::vector<RoadVertexDesc> children2) {
 	QMap<RoadVertexDesc, RoadVertexDesc> map;
@@ -2771,22 +2615,22 @@ QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findApproximateCorrespondentEdge
 }
 
 /**
- * 道路網１と道路網２で、対応する頂点を探す。
+ * Find the correspondence in two road graphs.
  */
 void GraphUtil::findCorrespondence(RoadGraph* roads1, AbstractForest* forest1, RoadGraph* roads2, AbstractForest* forest2, bool findAllMatching, float threshold_angle, QMap<RoadVertexDesc, RoadVertexDesc>& map1, QMap<RoadVertexDesc, RoadVertexDesc>& map2) {
 	std::list<RoadVertexDesc> seeds1;
 	std::list<RoadVertexDesc> seeds2;
 
-	// 各ルートエッジについて
+	// For each root edge
 	for (int i = 0; i < forest1->getRoots().size(); i++) {
 		RoadVertexDesc v1 = forest1->getRoots()[i];
 		RoadVertexDesc v2 = forest2->getRoots()[i];
 
-		// ルート頂点をマッチングさせる
+		// Match the root vertices
 		map1[v1] = v2;
 		map2[v2] = v1;
 
-		// ルート頂点を、シードに追加する
+		// register the root vertices as seeds.
 		seeds1.push_back(v1);
 		seeds2.push_back(v2);
 	}
@@ -2797,27 +2641,27 @@ void GraphUtil::findCorrespondence(RoadGraph* roads1, AbstractForest* forest1, R
 		RoadVertexDesc parent2 = seeds2.front();
 		seeds2.pop_front();
 
-		// どちらのノードにも、子ノードがない場合は、スキップ
+		// If there is no child, skip it.
 		if (forest1->getChildren(parent1).size() == 0 && forest2->getChildren(parent2).size() == 0) continue;
 
-		// 子リストを取得
+		// retrieve the children list
 		std::vector<RoadVertexDesc> children1 = forest1->getChildren(parent1);
 		std::vector<RoadVertexDesc> children2 = forest2->getChildren(parent2);
 
-		// 子ノード同士のベストマッチングを取得
+		// retrieve the matching for the children lists.
 		QMap<RoadVertexDesc, RoadVertexDesc> children_map = findCorrespondentEdges(roads1, parent1, children1, roads2, parent2, children2);
 		for (QMap<RoadVertexDesc, RoadVertexDesc>::iterator it = children_map.begin(); it != children_map.end(); ++it) {
 			RoadVertexDesc child1 = it.key();
 			RoadVertexDesc child2 = it.value();
 
-			// 角度をチェック
+			// if the difference in angle is too large, skip this pair.
 			if (diffAngle(roads1->graph[child1]->pt - roads1->graph[parent1]->pt, roads2->graph[child2]->pt - roads2->graph[parent2]->pt) > threshold_angle) continue;
 
-			// マッチングを更新
+			// update the matching
 			map1[child1] = child2;
 			map2[child2] = child1;
 
-			// fullyPairedフラグをtrueにする
+			// set fullyPaired flags
 			roads1->graph[getEdge(roads1, parent1, child1)]->fullyPaired = true;
 			roads2->graph[getEdge(roads2, parent2, child2)]->fullyPaired = true;
 
@@ -2827,12 +2671,12 @@ void GraphUtil::findCorrespondence(RoadGraph* roads1, AbstractForest* forest1, R
 
 		if (!findAllMatching) continue;
 
-		// 残り者の子ノードのマッチングを探す
+		// find the matching for the remained children
 		while (true) {
 			RoadVertexDesc child1, child2;
 			if (!forceMatching(roads1, parent1, forest1, map1, roads2, parent2, forest2, map2, child1, child2)) break;
 
-			// マッチングを更新
+			// update the matching
 			map1[child1] = child2;
 			map2[child2] = child1;
 
@@ -2851,7 +2695,7 @@ bool GraphUtil::forceMatching(RoadGraph* roads1, RoadVertexDesc parent1, Abstrac
 	int min_id1;
 	int min_id2;
 
-	// 子リストを取得
+	// retrieve the children list
 	std::vector<RoadVertexDesc> children1 = forest1->getChildren(parent1);
 	std::vector<RoadVertexDesc> children2 = forest2->getChildren(parent2);
 
@@ -2908,7 +2752,7 @@ bool GraphUtil::forceMatching(RoadGraph* roads1, RoadVertexDesc parent1, Abstrac
 		return true;
 	}
 
-	// ペアなし、つまり、全ての子ノードがペアになっている
+	// No pair is found, i.e. all the children should have pairs.
 	return false;
 }
 
@@ -2938,7 +2782,7 @@ bool GraphUtil::nextSequence(std::vector<int>& seq, int N) {
 }
 
 /**
- * エッジの平均長を計算して返却する。
+ * Return the average edge length.
  */
 float GraphUtil::computeAvgEdgeLength(RoadGraph* roads) {
 	float length = 0.0f;
@@ -3028,7 +2872,7 @@ QList<EdgePair> GraphUtil::getClosestEdgePairs(RoadGraph* roads1, RoadGraph* roa
 }
 
 /**
- * グローバル Rigid ICPを実施し、道路網１の位置を、道路網２に近づくよう変形する。
+ * Apply the global rigid ICP in order to fit the 1st road graph to the 2nd road graph in the least square manner.
  */
 void GraphUtil::rigidICP(RoadGraph* roads1, RoadGraph* roads2, QList<EdgePair>& pairs) {
 	cv::Mat src(pairs.size() * 2, 2, CV_32FC2);
@@ -3365,8 +3209,8 @@ RoadGraph* GraphUtil::createRadialNetwork(float size, int num, int degree) {
 }
 
 /**
- * 道路の統計情報を出力する。
- * degreeのヒストグラムと、lane数のヒストグラムを標準出力に出力する。
+ * Print the statistics of the road graph.
+ * Print the histogram of degrees and the historgram of lanes.
  */
 void GraphUtil::printStatistics(RoadGraph* roads) {
 	int degreesHistogram[10];

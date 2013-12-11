@@ -12,10 +12,10 @@ public:
 	float weight;
 	float importance;
 
-	bool valid;			// このエッジが、有効か、無効か
-	bool seed;			// このエッジは、フォレスト構築の際に、シードとして使用されたということ
-	int group;			// このエッジが、フォレスト構築の際に、どのツリーに属したかということ
-	bool fullyPaired;	// このエッジは、完全マッチングにおいて、対応相手が見つかったということ
+	bool valid;			// if this edge is valid
+	bool seed;			// if this edge is used as a seed of a forest
+	int group;			// to which tree in the forest this edge belongs to
+	bool fullyPaired;	// if this edge has a corresponding edge
 
 public:
 	RoadEdge(unsigned int lanes, unsigned int type, bool oneWay);

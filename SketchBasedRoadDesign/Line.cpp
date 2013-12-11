@@ -1,7 +1,6 @@
 ﻿#include "Line.h"
 
 Line::Line() {
-	// このアイテムは、マウスで動かすことができる
 	this->setFlag(QGraphicsItem::ItemIsMovable);
 }
 
