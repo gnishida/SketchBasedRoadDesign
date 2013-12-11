@@ -59,8 +59,8 @@ void RoadDBView::load(const char* filename) {
 
 float RoadDBView::showSimilarity(RoadGraph* roads2) {
 	// 各道路網のImportanceを計算する
-	GraphUtil::computeImportanceOfEdges(roads, 1.0f, 1.0f, 1.0f);
-	GraphUtil::computeImportanceOfEdges(roads2, 1.0f, 1.0f, 1.0f);
+	//GraphUtil::computeImportanceOfEdges(roads, 1.0f, 1.0f, 1.0f);
+	//GraphUtil::computeImportanceOfEdges(roads2, 1.0f, 1.0f, 1.0f);
 
 	// まず、それぞれの中心頂点を求める
 	RoadVertexDesc v1 = GraphUtil::getCentralVertex(roads);
@@ -73,13 +73,13 @@ float RoadDBView::showSimilarity(RoadGraph* roads2) {
 	// マッチングを探す
 	QMap<RoadVertexDesc, RoadVertexDesc> map1;
 	QMap<RoadVertexDesc, RoadVertexDesc> map2;
-	GraphUtil::findCorrespondence(roads, &tree1, roads2, &tree2, false, map1, map2);
+	GraphUtil::findCorrespondence(roads, &tree1, roads2, &tree2, false, 0.75f, map1, map2);
 
 	// マッチングに基づいて、道路網の表示を更新する
 	updateView();
 
 	// 類似度を計算する
-	float similarity = GraphUtil::computeSimilarity(roads, map1, roads2, map2);
+	float similarity = GraphUtil::computeSimilarity(roads, map1, roads2, map2, 1.0f, 5.0f);
 	QString str;
 	str.setNum(similarity);
 	//score->setText(str);

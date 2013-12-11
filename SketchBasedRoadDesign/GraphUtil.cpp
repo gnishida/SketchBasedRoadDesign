@@ -1321,7 +1321,10 @@ void GraphUtil::simplify(RoadGraph* roads, float dist_threshold) {
 			RoadVertexDesc v2 = findNearestVertex(roads, roads->graph[*vi]->getPt(), *vi);
 			if ((roads->graph[v2]->getPt() - roads->graph[*vi]->getPt()).length() > dist_threshold) break;
 
+			QVector2D pt = (roads->graph[*vi]->pt + roads->graph[v2]->pt) / 2.0f;
+
 			collapseVertex(roads, v2, *vi);
+			roads->graph[*vi]->pt = pt;
 		}
 
 		// 当該頂点に最も近いエッジを探す
@@ -1508,29 +1511,33 @@ bool GraphUtil::planarifyOne(RoadGraph* roads) {
 			//if ((src == src2 && tgt == tgt2) || (src == tgt2 && tgt == src2)) continue;
 			if (src == src2 || src == tgt2 || tgt == src2 || tgt == tgt2) continue;
 
+			for (int i = 0; i < e->polyLine.size() - 1; i++) {
+				for (int j = 0; j < e2->polyLine.size() - 1; j++) {
+					float tab, tcd;
+					QVector2D intPt;
+					if (Util::segmentSegmentIntersectXY(e->polyLine[i], e->polyLine[i+1], e2->polyLine[j], e2->polyLine[j+1], &tab, &tcd, true, intPt)) {
+						// エッジの端、ぎりぎりで、交差する場合は、交差させない
+						if ((roads->graph[src]->pt - intPt).length() < 10 || (roads->graph[tgt]->pt - intPt).length() < 10 || (roads->graph[src2]->pt - intPt).length() < 10 || (roads->graph[tgt2]->pt - intPt).length() < 10) continue;
 
-			float tab, tcd;
-			QVector2D intPt;
-			if (Util::segmentSegmentIntersectXY(roads->graph[src]->pt, roads->graph[tgt]->pt, roads->graph[src2]->pt, roads->graph[tgt2]->pt, &tab, &tcd, true, intPt)) {
-				if ((roads->graph[src]->pt - intPt).length() < 10 || (roads->graph[tgt]->pt - intPt).length() < 10 || (roads->graph[src2]->pt - intPt).length() < 10 || (roads->graph[tgt2]->pt - intPt).length() < 10) continue;
+						// 交点をノードとして登録
+						RoadVertex* new_v = new RoadVertex(intPt);
+						RoadVertexDesc new_v_desc = boost::add_vertex(roads->graph);
+						roads->graph[new_v_desc] = new_v;
 
-				// 交点をノードとして登録
-				RoadVertex* new_v = new RoadVertex(intPt);
-				RoadVertexDesc new_v_desc = boost::add_vertex(roads->graph);
-				roads->graph[new_v_desc] = new_v;
+						// もともとのエッジを無効にする
+						roads->graph[*ei]->valid = false;
+						roads->graph[*ei2]->valid = false;
 
-				// もともとのエッジを無効にする
-				roads->graph[*ei]->valid = false;
-				roads->graph[*ei2]->valid = false;
+						// 新たなエッジを追加する
+						addEdge(roads, src, new_v_desc, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
+						addEdge(roads, new_v_desc, tgt, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
 
-				// 新たなエッジを追加する
-				addEdge(roads, src, new_v_desc, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
-				addEdge(roads, new_v_desc, tgt, roads->graph[*ei]->lanes, roads->graph[*ei]->type, roads->graph[*ei]->oneWay);
+						addEdge(roads, src2, new_v_desc, roads->graph[*ei2]->lanes, roads->graph[*ei2]->type, roads->graph[*ei2]->oneWay);
+						addEdge(roads, new_v_desc, tgt2, roads->graph[*ei2]->lanes, roads->graph[*ei2]->type, roads->graph[*ei2]->oneWay);
 
-				addEdge(roads, src2, new_v_desc, roads->graph[*ei2]->lanes, roads->graph[*ei2]->type, roads->graph[*ei2]->oneWay);
-				addEdge(roads, new_v_desc, tgt2, roads->graph[*ei2]->lanes, roads->graph[*ei2]->type, roads->graph[*ei2]->oneWay);
-
-				return true;
+						return true;
+					}
+				}
 			}
 		}
 	}
@@ -2520,7 +2527,7 @@ float GraphUtil::computeDissimilarity2(RoadGraph* roads1, QMap<RoadVertexDesc, R
 /**
  * ２つの道路網の類似度を計算して返却する。
  */
-float GraphUtil::computeSimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadVertexDesc>& map1, RoadGraph* roads2, QMap<RoadVertexDesc, RoadVertexDesc>& map2) {
+float GraphUtil::computeSimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadVertexDesc>& map1, RoadGraph* roads2, QMap<RoadVertexDesc, RoadVertexDesc>& map2, float w_connectivity, float w_angle) {
 	float score = 0.0f;
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2529,12 +2536,20 @@ float GraphUtil::computeSimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadV
 	for (boost::tie(ei, eend) = boost::edges(roads1->graph); ei != eend; ++ei) {
 		if (!roads1->graph[*ei]->valid) continue;
 
-		RoadVertexDesc src = boost::source(*ei, roads1->graph);
-		RoadVertexDesc tgt = boost::target(*ei, roads1->graph);
+		RoadVertexDesc src1 = boost::source(*ei, roads1->graph);
+		RoadVertexDesc tgt1 = boost::target(*ei, roads1->graph);
 		
-		if (map1.contains(src) && map1.contains(tgt)) {
+		if (map1.contains(src1) && map1.contains(tgt1)) {
+			RoadVertexDesc src2 = map1[src1];
+			RoadVertexDesc tgt2 = map1[tgt1];
+
 			// 対応エッジがあるので、スコアを追加
-			score += roads1->graph[*ei]->importance;
+			//score += roads1->graph[*ei]->importance;
+			score += w_connectivity;
+
+			// 角度の差に基づいて、スコアを追加
+			float angle = diffAngle(roads1->graph[tgt1]->pt - roads1->graph[src1]->pt, roads2->graph[tgt2]->pt - roads2->graph[src2]->pt);
+			score += (M_PI - angle) / M_PI * w_angle;
 		}
 	}
 
@@ -2543,12 +2558,20 @@ float GraphUtil::computeSimilarity(RoadGraph* roads1, QMap<RoadVertexDesc, RoadV
 	for (boost::tie(ei, eend) = boost::edges(roads2->graph); ei != eend; ++ei) {
 		if (!roads2->graph[*ei]->valid) continue;
 
-		RoadVertexDesc src = boost::source(*ei, roads2->graph);
-		RoadVertexDesc tgt = boost::target(*ei, roads2->graph);
+		RoadVertexDesc src2 = boost::source(*ei, roads2->graph);
+		RoadVertexDesc tgt2 = boost::target(*ei, roads2->graph);
 		
-		if (map2.contains(src) && map2.contains(tgt)) {
+		if (map2.contains(src2) && map2.contains(tgt2)) {
+			RoadVertexDesc src1 = map2[src2];
+			RoadVertexDesc tgt1 = map2[tgt2];
+
 			// 対応エッジがあるので、スコアを追加
-			score += roads2->graph[*ei]->importance;
+			//score += roads2->graph[*ei]->importance;
+			score += w_connectivity;
+
+			// 角度の差に基づいて、スコアを追加
+			float angle = diffAngle(roads1->graph[tgt1]->pt - roads1->graph[src1]->pt, roads2->graph[tgt2]->pt - roads2->graph[src2]->pt);
+			score += (M_PI - angle) / M_PI * w_angle;
 		}
 	}
 
@@ -2608,6 +2631,10 @@ void GraphUtil::findCorrespondenceByNearestNeighbor(RoadGraph* roads1, RoadGraph
  * ただし、degreeが6を超えると、計算量が爆発するので、ループ数を1000に制約する。
  */
 QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findCorrespondentEdges(RoadGraph* roads1, RoadVertexDesc parent1, std::vector<RoadVertexDesc> children1, RoadGraph* roads2, RoadVertexDesc parent2, std::vector<RoadVertexDesc> children2) {
+	if (children1.size() > 6 || children2.size() > 6) {
+		return findApproximateCorrespondentEdges(roads1, parent1, children1, roads2, parent2, children2);
+	}
+
 	QMap<RoadVertexDesc, RoadVertexDesc> map;
 
 	std::vector<int> permutation;
@@ -2666,8 +2693,25 @@ QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findCorrespondentEdges(RoadGraph
 			// 角度の差の最大値を求める
 			float diff = 0.0f;
 			for (int i = 0; i < children2.size(); i++) {
-				QVector2D dir1 = roads1->graph[children1[permutation[i]]]->pt - roads1->graph[parent1]->pt;
-				QVector2D dir2 = roads2->graph[children2[i]]->pt - roads2->graph[parent2]->pt;
+				RoadEdgeDesc e1 = getEdge(roads1, parent1, children1[permutation[i]]);
+				RoadEdgeDesc e2 = getEdge(roads2, parent2, children2[i]);
+
+				QVector2D dir1;
+				if ((roads1->graph[parent1]->pt - roads1->graph[e1]->polyLine[0]).length() < (roads1->graph[parent1]->pt - roads1->graph[e1]->polyLine[roads1->graph[e1]->polyLine.size() - 1]).length()) {
+					dir1 = roads1->graph[e1]->polyLine[1] - roads1->graph[e1]->polyLine[0];
+				} else {
+					dir1 = roads1->graph[e1]->polyLine[roads1->graph[e1]->polyLine.size() - 2] - roads1->graph[e1]->polyLine[roads1->graph[e1]->polyLine.size() - 1];
+				}
+
+				QVector2D dir2;
+				if ((roads2->graph[parent2]->pt - roads2->graph[e2]->polyLine[0]).length() < (roads2->graph[parent2]->pt - roads1->graph[e2]->polyLine[roads2->graph[e2]->polyLine.size() - 1]).length()) {
+					dir2 = roads2->graph[e2]->polyLine[1] - roads2->graph[e2]->polyLine[0];
+				} else {
+					dir2 = roads2->graph[e2]->polyLine[roads2->graph[e2]->polyLine.size() - 2] - roads2->graph[e2]->polyLine[roads2->graph[e2]->polyLine.size() - 1];
+				}
+
+				//QVector2D dir1 = roads1->graph[children1[permutation[i]]]->pt - roads1->graph[parent1]->pt;
+				//QVector2D dir2 = roads2->graph[children2[i]]->pt - roads2->graph[parent2]->pt;
 
 				diff = std::max(diff, diffAngle(dir1, dir2));
 			}
@@ -2688,9 +2732,48 @@ QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findCorrespondentEdges(RoadGraph
 }
 
 /**
+ * ２つの対応するノードについて、その子ノードのベストマッチングを探す。
+ * アルゴリズム：角度の差が最も近いペアを抽出する。以降、どちらかの子ノードがなくなるまで、繰り返す。
+ */
+QMap<RoadVertexDesc, RoadVertexDesc> GraphUtil::findApproximateCorrespondentEdges(RoadGraph* roads1, RoadVertexDesc parent1, std::vector<RoadVertexDesc> children1, RoadGraph* roads2, RoadVertexDesc parent2, std::vector<RoadVertexDesc> children2) {
+	QMap<RoadVertexDesc, RoadVertexDesc> map;
+	QList<int> used1;
+	QList<int> used2;
+
+	while (true) {
+		float min_diff = std::numeric_limits<float>::max();
+		int min_i = -1;
+		int min_j = -1;
+
+		for (int i = 0; i < children1.size(); i++) {
+			if (used1.contains(i)) continue;
+
+			for (int j = 0; j < children2.size(); j++) {
+				if (used2.contains(j)) continue;
+
+				float diff = diffAngle(roads1->graph[children1[i]]->pt - roads1->graph[parent1]->pt, roads2->graph[children2[j]]->pt - roads2->graph[parent2]->pt);
+				if (diff < min_diff) {
+					min_diff = diff;
+					min_i = i;
+					min_j = j;
+				}
+			}
+		}
+
+		if (min_i == -1) break;
+
+		map[children1[min_i]] = children2[min_j];
+		used1.push_back(min_i);
+		used2.push_back(min_j);
+	}
+
+	return map;
+}
+
+/**
  * 道路網１と道路網２で、対応する頂点を探す。
  */
-void GraphUtil::findCorrespondence(RoadGraph* roads1, AbstractForest* forest1, RoadGraph* roads2, AbstractForest* forest2, bool findAllMatching, QMap<RoadVertexDesc, RoadVertexDesc>& map1, QMap<RoadVertexDesc, RoadVertexDesc>& map2) {
+void GraphUtil::findCorrespondence(RoadGraph* roads1, AbstractForest* forest1, RoadGraph* roads2, AbstractForest* forest2, bool findAllMatching, float threshold_angle, QMap<RoadVertexDesc, RoadVertexDesc>& map1, QMap<RoadVertexDesc, RoadVertexDesc>& map2) {
 	std::list<RoadVertexDesc> seeds1;
 	std::list<RoadVertexDesc> seeds2;
 
@@ -2726,6 +2809,9 @@ void GraphUtil::findCorrespondence(RoadGraph* roads1, AbstractForest* forest1, R
 		for (QMap<RoadVertexDesc, RoadVertexDesc>::iterator it = children_map.begin(); it != children_map.end(); ++it) {
 			RoadVertexDesc child1 = it.key();
 			RoadVertexDesc child2 = it.value();
+
+			// 角度をチェック
+			if (diffAngle(roads1->graph[child1]->pt - roads1->graph[parent1]->pt, roads2->graph[child2]->pt - roads2->graph[parent2]->pt) > threshold_angle) continue;
 
 			// マッチングを更新
 			map1[child1] = child2;

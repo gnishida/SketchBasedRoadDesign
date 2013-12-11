@@ -22,6 +22,7 @@ public:
 	RoadGraph* sketchToRoads();
 	void roadsToSketch();
 	void setReferene(RoadGraph* ref_roads);
+	void clear();
 
 signals:
 

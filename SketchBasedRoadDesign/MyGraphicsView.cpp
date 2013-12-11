@@ -86,6 +86,20 @@ void MyGraphicsView::roadsToSketch() {
 void MyGraphicsView::setReferene(RoadGraph* ref_roads) {
 }
 
+/**
+ * 画面をクリアする。
+ */
+void MyGraphicsView::clear() {
+	scene->clear();
+
+	if (roads != NULL) {
+		delete roads;
+		roads = NULL;
+	}
+
+	update();
+}
+
 void MyGraphicsView::mousePressEvent(QMouseEvent* e) {
 	if (e->buttons() == Qt::LeftButton) {
 		currentLine = new Line();

@@ -2,6 +2,7 @@
 #include "MyMainWindow.h"
 #include "RoadGraph.h"
 #include "RoadDBView.h"
+#include "GraphUtil.h"
 #include <qfiledialog.h>
 #include <limits>
 
@@ -13,6 +14,7 @@ ControlWidget::ControlWidget(MyMainWindow* parent) : QDockWidget("Control", (QWi
 	// setup the signal handler
 	connect(ui.pushButtonSearch, SIGNAL(clicked()), this, SLOT(search()));
 	connect(ui.pushButtonOK, SIGNAL(clicked()), this, SLOT(accept()));
+	connect(ui.pushButtonClear, SIGNAL(clicked()), this, SLOT(clear()));
 	connect(ui.pushButtonSave, SIGNAL(clicked()), this, SLOT(save()));
 }
 
@@ -34,11 +36,13 @@ void ControlWidget::search() {
 	}
 
 	parent->view->setReferene(min_view->roads);
-
-	delete roads;
 }
 
 void ControlWidget::accept() {
+}
+
+void ControlWidget::clear() {
+	parent->view->clear();
 }
 
 void ControlWidget::save() {

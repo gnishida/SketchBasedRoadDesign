@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'ControlWidget.ui'
 **
-** Created: Fri Dec 6 18:57:22 2013
+** Created: Wed Dec 11 09:50:29 2013
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -30,12 +30,13 @@ public:
     QPushButton *pushButtonOK;
     QSlider *horizontalSlider;
     QPushButton *pushButtonSave;
+    QPushButton *pushButtonClear;
 
     void setupUi(QDockWidget *ControlWidget)
     {
         if (ControlWidget->objectName().isEmpty())
             ControlWidget->setObjectName(QString::fromUtf8("ControlWidget"));
-        ControlWidget->resize(148, 261);
+        ControlWidget->resize(148, 319);
         ControlWidget->setMinimumSize(QSize(145, 261));
         ControlWidget->setStyleSheet(QString::fromUtf8("background-color: rgb(181, 181, 181);"));
         dockWidgetContents = new QWidget();
@@ -52,7 +53,10 @@ public:
         horizontalSlider->setOrientation(Qt::Horizontal);
         pushButtonSave = new QPushButton(dockWidgetContents);
         pushButtonSave->setObjectName(QString::fromUtf8("pushButtonSave"));
-        pushButtonSave->setGeometry(QRect(10, 200, 131, 31));
+        pushButtonSave->setGeometry(QRect(10, 240, 131, 31));
+        pushButtonClear = new QPushButton(dockWidgetContents);
+        pushButtonClear->setObjectName(QString::fromUtf8("pushButtonClear"));
+        pushButtonClear->setGeometry(QRect(10, 190, 131, 31));
         ControlWidget->setWidget(dockWidgetContents);
 
         retranslateUi(ControlWidget);
@@ -65,6 +69,7 @@ public:
         pushButtonSearch->setText(QApplication::translate("ControlWidget", "Search", 0, QApplication::UnicodeUTF8));
         pushButtonOK->setText(QApplication::translate("ControlWidget", "OK", 0, QApplication::UnicodeUTF8));
         pushButtonSave->setText(QApplication::translate("ControlWidget", "Save", 0, QApplication::UnicodeUTF8));
+        pushButtonClear->setText(QApplication::translate("ControlWidget", "Clear", 0, QApplication::UnicodeUTF8));
         Q_UNUSED(ControlWidget);
     } // retranslateUi
 
