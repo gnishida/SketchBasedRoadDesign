@@ -30,8 +30,6 @@ void RoadGraph::clear() {
 		delete edge;
 	}
 
-	siblings.clear();
-
 	graph.clear();
 }
 

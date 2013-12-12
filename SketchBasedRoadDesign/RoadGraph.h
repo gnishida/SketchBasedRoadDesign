@@ -32,18 +32,6 @@ public:
 class RoadGraph {
 public:
 	BGLGraph graph;
-	QMap<RoadVertexDesc, std::vector<RoadVertexDesc> > siblings;
-
-	/** Connectivity */
-	//QMap<RoadVertexDesc, QList<RoadVertexDesc> > connectivities;
-
-	/** 木構造を作成するため、親子関係を保持する */
-	//QMap<RoadVertexDesc, RoadVertexDesc> childrenToParent;
-	//QMap<RoadVertexDesc, std::vector<RoadEdgeDesc> > childrenRemovedEdges;
-	//QMap<RoadVertexDesc, std::vector<RoadEdgeDesc> > parentAddedEdges;
-
-	/** collapseヒストリ */
-	//std::vector<CollapseAction> collapseHistory;
 
 public:
 	RoadGraph();
@@ -53,12 +41,9 @@ public:
 	void load(FILE* fp, int roadType);
 	void save(FILE* fp);
 
-	//void computeConnectivities();
-	//bool isConnected(RoadVertexDesc desc1, RoadVertexDesc desc2);
 	void computeEdgeWeights();
 
 	std::vector<RoadEdgeDesc> getMajorEdges(RoadGraph* roads, int num);
-	//bool lessWeight(const RoadEdgeDesc& left, const RoadEdgeDesc& right);
 
 	QList<RoadEdgeDesc> getOrderedEdgesByImportance();
 
