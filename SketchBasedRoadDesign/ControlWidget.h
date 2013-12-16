@@ -23,6 +23,7 @@ public slots:
 	void modeSelect(bool flag);
 	void zoom(int factor);
 	void search();
+	void accept();
 	void clear();
 	void save();
 };

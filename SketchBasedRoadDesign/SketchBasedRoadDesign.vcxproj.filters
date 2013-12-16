@@ -101,9 +101,6 @@
     <ClCompile Include="BFSTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AbstractForest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="RoadView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -125,11 +122,23 @@
     <ClCompile Include="RoadBox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RoadCanvas.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Sketch.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GLWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RoadGraphRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AbstractForest.cpp">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -204,9 +213,6 @@
     <ClInclude Include="BFSTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AbstractForest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="RoadView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -216,10 +222,22 @@
     <ClInclude Include="GeneratedFiles\ui_RoadBox.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="RoadCanvas.h">
+    <ClInclude Include="Sketch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Sketch.h">
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GLWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RoadGraphRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractForest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

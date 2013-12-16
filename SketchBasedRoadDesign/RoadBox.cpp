@@ -4,14 +4,14 @@
 #include <qlayout.h>
 #include <qpushbutton.h>
 
-RoadBox::RoadBox(MyMainWindow* mainWin, const char* filename) : QWidget((QWidget*)mainWin) {
+RoadBox::RoadBox(MyMainWindow* mainWin, const char* filename, float roadSize) : QWidget((QWidget*)mainWin) {
 	this->mainWin = mainWin;
 	this->setMinimumSize(250, 250);
 
 	QVBoxLayout* layout = new QVBoxLayout();
 	this->setLayout(layout);
 
-	view = new RoadView();
+	view = new RoadView(mainWin, roadSize);
 
 	view->load(filename);
 	pushButtonSelect = new QPushButton(tr("Select"));
@@ -27,6 +27,8 @@ RoadBox::~RoadBox() {
 }
 
 void RoadBox::select() {
-	mainWin->canvas->ref_roads = GraphUtil::copyRoads(view->roads);
-	mainWin->canvas->updateView();
+	mainWin->glWidget->ref_roads = GraphUtil::copyRoads(view->roads);
+	GraphUtil::translate(mainWin->glWidget->ref_roads, view->offset);
+
+	mainWin->glWidget->updateGL();
 }

@@ -3,7 +3,7 @@
 
 #include <QtGui/QMainWindow>
 #include "ui_MyMainWindow.h"
-#include "RoadCanvas.h"
+#include "GLWidget.h"
 #include "RoadBoxList.h"
 #include "ControlWidget.h"
 #include <qscrollarea.h>
@@ -18,10 +18,12 @@ public:
 public:
 	Ui::MyMainWindowClass ui;
 	int mode;
-	RoadCanvas* canvas;
+	GLWidget* glWidget;
 	ControlWidget* controlWidget;
-	RoadBoxList* roadBoxList;
-	QDockWidget *dockRoadBoxList;
+	RoadBoxList* largeRoadBoxList;
+	QDockWidget *dockLargeRoadBoxList;
+	RoadBoxList* smallRoadBoxList;
+	QDockWidget *dockSmallRoadBoxList;
 
 public:
 	MyMainWindow(QWidget *parent = 0, Qt::WFlags flags = 0);
@@ -31,7 +33,8 @@ private slots:
 	void newRoad();
 	void openRoad();
 	void showControlWidget();
-	void showReferenceRoads();
+	void showLargeReferenceRoads();
+	void showSmallReferenceRoads();
 };
 
 #endif // MYMAINWINDOW_H

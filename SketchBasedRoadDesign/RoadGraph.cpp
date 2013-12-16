@@ -17,6 +17,117 @@ RoadGraph::~RoadGraph() {
 	clear();
 }
 
+void RoadGraph::generateMesh(float widthBase, float highwayHeight, float avenueHeight, float curbRatio, bool drawLocalStreets, float opacity) {
+	renderables.clear();
+
+	renderables.push_back(Renderable(GL_TRIANGLES));
+
+	// road edge
+	RoadEdgeIter ei, eend;
+	for (boost::tie(ei, eend) = boost::edges(graph); ei != eend; ++ei) {
+		RoadEdge* edge = graph[*ei];
+
+		QColor color, bColor;
+		float height;
+		switch (edge->type) {
+		case 3:	// high way
+			color = QColor(255, 225, 104, 255 * opacity);
+			bColor = QColor(229, 153, 21, 255 * opacity);
+			height = highwayHeight;
+			break;
+		case 2: // avenue
+		case 1: // street
+			color = QColor(255, 255, 255, 255 * opacity);
+			bColor = QColor(217, 209, 201, 255 * opacity);
+			height = avenueHeight;
+			break;
+		}
+
+		// draw the border of the road segment
+		if (!drawLocalStreets && edge->type == 1) {
+			// If this is the local street and it should be drawn in gray color, it should be a little narrow line.
+			addMeshFromEdge(&renderables[0], edge, widthBase * 0.6f, bColor, 0.0f);
+		} else {
+			addMeshFromEdge(&renderables[0], edge, widthBase * (1.0f + curbRatio), bColor, 0.0f);
+			addMeshFromEdge(&renderables[0], edge, widthBase, color, height);
+		}
+	}
+
+	renderables.push_back(Renderable(GL_POINTS, 20.0f));
+
+	modified = false;
+}
+
+/**
+ * Add a mesh for the specified edge.
+ */
+void RoadGraph::addMeshFromEdge(Renderable* renderable, RoadEdge* edge, float widthBase, QColor color, float height) {
+	Vertex v;
+
+	// define the width of the road segment
+	float width;
+	switch (edge->type) {
+	case 3: // high way
+		width = widthBase * 2.0f;
+		break;
+	case 2: // avenue
+		width = widthBase * 1.5f;
+		break;
+	case 1: // local street
+		width = widthBase * 1.0f;
+		break;
+	}
+
+	int num = edge->polyLine.size();
+
+	// draw the edge
+	for (int i = 0; i < num - 1; ++i) {
+		QVector2D pt1 = edge->polyLine[i];
+		QVector2D pt2 = edge->polyLine[i + 1];
+		QVector2D vec = pt2 - pt1;
+		vec = QVector2D(-vec.y(), vec.x());
+		vec.normalize();
+
+		QVector2D p0 = pt1 + vec * width * 0.5f;
+		QVector2D p1 = pt1 - vec * width * 0.5f;
+		QVector2D p2 = pt2 - vec * width * 0.5f;
+		QVector2D p3 = pt2 + vec * width * 0.5f;
+
+		v.color[0] = color.redF();
+		v.color[1] = color.greenF();
+		v.color[2] = color.blueF();
+		v.color[3] = color.alphaF();
+		v.location[2] = height;
+
+		v.location[0] = p0.x();
+		v.location[1] = p0.y();
+		renderables[0].vertices.push_back(v);
+
+		v.location[0] = p1.x();
+		v.location[1] = p1.y();
+		renderables[0].vertices.push_back(v);
+
+		v.location[0] = p2.x();
+		v.location[1] = p2.y();
+		renderables[0].vertices.push_back(v);
+
+		v.location[0] = p0.x();
+		v.location[1] = p0.y();
+		renderables[0].vertices.push_back(v);
+
+		v.location[0] = p2.x();
+		v.location[1] = p2.y();
+		renderables[0].vertices.push_back(v);
+
+		v.location[0] = p3.x();
+		v.location[1] = p3.y();
+		renderables[0].vertices.push_back(v);
+	}
+}
+
+/**
+ * Clear the road graph.
+ */
 void RoadGraph::clear() {
 	RoadVertexIter vi, vend;
 	for (boost::tie(vi, vend) = boost::vertices(graph); vi != vend; ++vi) {
@@ -33,6 +144,9 @@ void RoadGraph::clear() {
 	graph.clear();
 }
 
+/**
+ * Load the road graph from a file.
+ */
 void RoadGraph::load(FILE* fp, int roadType) {
 	clear();
 
@@ -98,6 +212,9 @@ void RoadGraph::load(FILE* fp, int roadType) {
 	}
 }
 
+/**
+ * Save the road graph to a file.
+ */
 void RoadGraph::save(FILE* fp) {
 	int nVertices = GraphUtil::getNumVertices(this);
 	fwrite(&nVertices, sizeof(int), 1, fp);
@@ -157,54 +274,12 @@ void RoadGraph::save(FILE* fp) {
 	}
 }
 
-/**
- * 接続性情報を計算する。
- * 注意：頂点の追加、エッジの追加などにより、この情報は正しくなくなる！
- */
-/*
-void RoadGraph::computeConnectivities() {
-	connectivities.clear();
-
-	RoadVertexIter vi, vend;
-	for (boost::tie(vi, vend) = boost::vertices(graph); vi != vend; ++vi) {
-		if (!graph[*vi]->valid) continue;
-
-		QList<RoadVertexDesc> list;
-		list.push_back(*vi);
-
-		std::list<RoadVertexDesc> queue;
-
-		queue.push_back(*vi);
-
-		// 各頂点について、到達できる頂点を全て洗い出す
-		while (!queue.empty()) {
-			RoadVertexDesc v = queue.front();
-			queue.pop_front();
-
-			RoadOutEdgeIter ei, eend;
-			for (boost::tie(ei, eend) = boost::out_edges(v, graph); ei != eend; ++ei) {
-				if (!graph[*ei]->valid) continue;
-
-				RoadVertexDesc u = boost::target(*ei, graph);
-				if (!graph[u]->valid) continue;
-
-				if (list.contains(u)) continue;
-
-				list.push_back(u);
-				queue.push_back(u);
-			}
-		}
-
-		connectivities[*vi] = list;
+void RoadGraph::setWidth(float widthBase) {
+	if (this->widthBase != widthBase) {
+		this->widthBase = widthBase;
+		modified = true;
 	}
 }
-
-bool RoadGraph::isConnected(RoadVertexDesc desc1, RoadVertexDesc desc2) {
-	if (!connectivities.contains(desc1)) return false;
-
-	return connectivities[desc1].contains(desc2);
-}
-*/
 
 /**
  * エッジの重みを計算する。
@@ -233,29 +308,6 @@ void RoadGraph::computeEdgeWeights() {
 			}
 		}
 	}
-}
-
-/**
- * num個のメジャーなエッジを返却する。
- * レーン数が多い道路を選択する。
- */
-std::vector<RoadEdgeDesc> RoadGraph::getMajorEdges(RoadGraph* roads, int num) {
-	std::vector<RoadEdgeDesc> data;
-	RoadEdgeIter ei, eend;
-	for (boost::tie(ei, eend) = boost::edges(graph); ei != eend; ++ei) {
-		if (!graph[*ei]->valid) continue;
-
-		data.push_back(*ei);
-	}
-
-	std::sort(data.begin(), data.end(), LessWeight(roads));
-
-	std::vector<RoadEdgeDesc> ret;
-	for (int i = 0; i < num; i++) {
-		ret.push_back(data[i]);
-	}
-
-	return ret;
 }
 
 /**

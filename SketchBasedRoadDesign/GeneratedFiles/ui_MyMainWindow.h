@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'MyMainWindow.ui'
 **
-** Created: Sun Dec 15 22:22:43 2013
+** Created: Mon Dec 16 10:28:41 2013
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -31,7 +31,8 @@ public:
     QAction *actionNew;
     QAction *actionOpen;
     QAction *actionExit;
-    QAction *actionReferenceRoads;
+    QAction *actionLargeReferenceRoads;
+    QAction *actionSmallReferenceRoads;
     QWidget *centralWidget;
     QMenuBar *menuBar;
     QMenu *menuWindow;
@@ -52,8 +53,10 @@ public:
         actionOpen->setObjectName(QString::fromUtf8("actionOpen"));
         actionExit = new QAction(MyMainWindowClass);
         actionExit->setObjectName(QString::fromUtf8("actionExit"));
-        actionReferenceRoads = new QAction(MyMainWindowClass);
-        actionReferenceRoads->setObjectName(QString::fromUtf8("actionReferenceRoads"));
+        actionLargeReferenceRoads = new QAction(MyMainWindowClass);
+        actionLargeReferenceRoads->setObjectName(QString::fromUtf8("actionLargeReferenceRoads"));
+        actionSmallReferenceRoads = new QAction(MyMainWindowClass);
+        actionSmallReferenceRoads->setObjectName(QString::fromUtf8("actionSmallReferenceRoads"));
         centralWidget = new QWidget(MyMainWindowClass);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         MyMainWindowClass->setCentralWidget(centralWidget);
@@ -75,7 +78,8 @@ public:
         menuBar->addAction(menuFile->menuAction());
         menuBar->addAction(menuWindow->menuAction());
         menuWindow->addAction(actionControlWidget);
-        menuWindow->addAction(actionReferenceRoads);
+        menuWindow->addAction(actionLargeReferenceRoads);
+        menuWindow->addAction(actionSmallReferenceRoads);
         menuFile->addAction(actionNew);
         menuFile->addAction(actionOpen);
         menuFile->addAction(actionExit);
@@ -92,7 +96,8 @@ public:
         actionNew->setText(QApplication::translate("MyMainWindowClass", "New", 0, QApplication::UnicodeUTF8));
         actionOpen->setText(QApplication::translate("MyMainWindowClass", "Open", 0, QApplication::UnicodeUTF8));
         actionExit->setText(QApplication::translate("MyMainWindowClass", "Exit", 0, QApplication::UnicodeUTF8));
-        actionReferenceRoads->setText(QApplication::translate("MyMainWindowClass", "Reference Roads", 0, QApplication::UnicodeUTF8));
+        actionLargeReferenceRoads->setText(QApplication::translate("MyMainWindowClass", "Large Roads", 0, QApplication::UnicodeUTF8));
+        actionSmallReferenceRoads->setText(QApplication::translate("MyMainWindowClass", "Small Roads", 0, QApplication::UnicodeUTF8));
         menuWindow->setTitle(QApplication::translate("MyMainWindowClass", "Window", 0, QApplication::UnicodeUTF8));
         menuFile->setTitle(QApplication::translate("MyMainWindowClass", "File", 0, QApplication::UnicodeUTF8));
     } // retranslateUi

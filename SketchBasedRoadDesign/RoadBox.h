@@ -17,7 +17,7 @@ public:
 	QPushButton* pushButtonSelect;
 
 public:
-	RoadBox(MyMainWindow* mainWin, const char* filename);
+	RoadBox(MyMainWindow* mainWin, const char* filename, float roadSize);
 	~RoadBox();
 
 public slots:

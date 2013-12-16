@@ -28,7 +28,8 @@
      <string>Window</string>
     </property>
     <addaction name="actionControlWidget"/>
-    <addaction name="actionReferenceRoads"/>
+    <addaction name="actionLargeReferenceRoads"/>
+    <addaction name="actionSmallReferenceRoads"/>
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
@@ -70,9 +71,14 @@
     <string>Exit</string>
    </property>
   </action>
-  <action name="actionReferenceRoads">
+  <action name="actionLargeReferenceRoads">
    <property name="text">
-    <string>Reference Roads</string>
+    <string>Large Roads</string>
+   </property>
+  </action>
+  <action name="actionSmallReferenceRoads">
+   <property name="text">
+    <string>Small Roads</string>
    </property>
   </action>
  </widget>

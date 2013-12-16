@@ -133,6 +133,7 @@
     <ClCompile Include="BBox.cpp" />
     <ClCompile Include="BFSForest.cpp" />
     <ClCompile Include="BFSTree.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ControlWidget.cpp" />
     <ClCompile Include="GeneratedFiles\Debug\moc_ControlWidget.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -184,16 +185,18 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="GLWidget.cpp" />
     <ClCompile Include="GraphUtil.cpp" />
     <ClCompile Include="Line.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyGraphicsView.cpp" />
     <ClCompile Include="MyMainWindow.cpp" />
+    <ClCompile Include="Renderable.cpp" />
     <ClCompile Include="RoadBox.cpp" />
     <ClCompile Include="RoadBoxList.cpp" />
     <ClCompile Include="RoadEdge.cpp" />
     <ClCompile Include="RoadGraph.cpp" />
-    <ClCompile Include="RoadCanvas.cpp" />
+    <ClCompile Include="RoadGraphRenderer.cpp" />
     <ClCompile Include="RoadVertex.cpp" />
     <ClCompile Include="RoadView.cpp" />
     <ClCompile Include="Sketch.cpp" />
@@ -265,10 +268,12 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe" -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED  -DBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB "-I$(BOOST_ROOT)\." "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtTest" "-I$(CV_ROOT)\include"</Command>
     </CustomBuild>
     <ClInclude Include="BFSTree.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="GeneratedFiles\ui_ControlWidget.h" />
     <ClInclude Include="GeneratedFiles\ui_MyMainWindow.h" />
     <ClInclude Include="GeneratedFiles\ui_RoadBox.h" />
     <ClInclude Include="GeneratedFiles\ui_RoadBoxList.h" />
+    <ClInclude Include="GLWidget.h" />
     <ClInclude Include="GraphUtil.h" />
     <ClInclude Include="Line.h" />
     <CustomBuild Include="RoadBoxList.h">
@@ -307,9 +312,10 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe" -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED  -DBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB "-I$(BOOST_ROOT)\." "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtTest" "-I$(CV_ROOT)\include"</Command>
     </CustomBuild>
+    <ClInclude Include="Renderable.h" />
     <ClInclude Include="RoadEdge.h" />
     <ClInclude Include="RoadGraph.h" />
-    <ClInclude Include="RoadCanvas.h" />
+    <ClInclude Include="RoadGraphRenderer.h" />
     <ClInclude Include="RoadVertex.h" />
     <ClInclude Include="RoadView.h" />
     <ClInclude Include="Sketch.h" />

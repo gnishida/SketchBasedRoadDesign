@@ -82,34 +82,56 @@ void ControlWidget::modeSelect(bool flag) {
 }
 
 void ControlWidget::zoom(int factor) {
-	if (factor <= 1) mainWin->canvas->setZoom(RoadCanvas::ZOOM_OUT);
-	else mainWin->canvas->setZoom(1.0f);
+	if (factor <= 1) mainWin->glWidget->camera->dz = GLWidget::MAX_Z;
+	else mainWin->glWidget->camera->dz = GLWidget::MIN_Z;
 
-	mainWin->roadBoxList->updateWidget();
+	mainWin->glWidget->updateGL();
 }
 
 void ControlWidget::search() {
-	GraphUtil::planarify(mainWin->canvas->sketch);
-	for (int i = 0; i < mainWin->roadBoxList->references.size(); i++) {
-		mainWin->roadBoxList->references[i]->view->showSimilarity(mainWin->canvas->sketch);
+	GraphUtil::planarify(mainWin->glWidget->sketch);
+
+	if (mainWin->glWidget->camera->dz < GLWidget::MAX_Z) {
+		for (int i = 0; i < mainWin->smallRoadBoxList->references.size(); i++) {
+			qDebug() << i;
+			mainWin->smallRoadBoxList->references[i]->view->showSimilarity(mainWin->glWidget->sketch, 3000, true);
+		}
+	} else {
+		for (int i = 0; i < mainWin->largeRoadBoxList->references.size(); i++) {
+			qDebug() << i;
+			mainWin->largeRoadBoxList->references[i]->view->showSimilarity(mainWin->glWidget->sketch, 3000, false);
+		}
 	}
 	
-	mainWin->canvas->update();
+	mainWin->glWidget->updateGL();
+}
+
+/**
+ * Finalize the reference roads as the actual roads.
+ */
+void ControlWidget::accept() {
+	if (mainWin->glWidget->ref_roads == NULL) return;
+
+	GraphUtil::mergeRoads(mainWin->glWidget->roads, mainWin->glWidget->ref_roads);
+	delete mainWin->glWidget->ref_roads;
+	mainWin->glWidget->ref_roads = NULL;
+
+	mainWin->glWidget->updateGL();
 }
 
 /**
  * Clear the screen.
  */
 void ControlWidget::clear() {
-	mainWin->canvas->sketch->clear();
-	mainWin->canvas->updateView();
+	mainWin->glWidget->sketch->clear();
+	mainWin->glWidget->updateGL();
 }
 
 void ControlWidget::save() {
 	QString filename = QFileDialog::getSaveFileName(this, tr("Save road network ..."), QString(), tr("GSM Files (*.gsm)"));
 	if (filename != QString::null && !filename.isEmpty()) {
 		FILE* fp = fopen(filename.toUtf8().data(), "wb");
-		RoadGraph* roads = mainWin->canvas->sketch;
+		RoadGraph* roads = mainWin->glWidget->sketch;
 		roads->save(fp);
 		fclose(fp);
 

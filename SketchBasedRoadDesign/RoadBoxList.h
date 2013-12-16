@@ -19,10 +19,8 @@ public:
 	//std::vector<RoadGraph*> smallRoads;
 
 public:
-	RoadBoxList(MyMainWindow* mainWin);
+	RoadBoxList(MyMainWindow* mainWin, std::vector<QString> filelist, float roadSizeroadSize);
 	~RoadBoxList();
-
-	void updateWidget();
 
 public slots:
 
