@@ -3,28 +3,35 @@
 
 #include <QtGui/QMainWindow>
 #include "ui_MyMainWindow.h"
-#include "MyGraphicsView.h"
-#include "RoadDBView.h"
+#include "RoadCanvas.h"
+#include "RoadBoxList.h"
 #include "ControlWidget.h"
 #include <qscrollarea.h>
 
 class MyMainWindow : public QMainWindow
 {
-	Q_OBJECT
+Q_OBJECT
+
+public:
+	static enum { MODE_VIEW = 0, MODE_SKETCH, MODE_SELECT };
 
 public:
 	Ui::MyMainWindowClass ui;
-	QScrollArea* scrollArea;
-	MyGraphicsView* view;
-	std::vector<RoadDBView*> examples;
+	int mode;
+	RoadCanvas* canvas;
 	ControlWidget* controlWidget;
+	RoadBoxList* roadBoxList;
+	QDockWidget *dockRoadBoxList;
 
 public:
 	MyMainWindow(QWidget *parent = 0, Qt::WFlags flags = 0);
 	~MyMainWindow();
 
 private slots:
+	void newRoad();
+	void openRoad();
 	void showControlWidget();
+	void showReferenceRoads();
 };
 
 #endif // MYMAINWINDOW_H

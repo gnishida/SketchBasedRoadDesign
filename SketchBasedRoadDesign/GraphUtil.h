@@ -37,7 +37,9 @@ public:
 	static int getNumVertices(RoadGraph* roads, bool onlyValidVertex = true);
 	static int getNumConnectedVertices(RoadGraph* roads, RoadVertexDesc start, bool onlyValidVertex = true);
 	static RoadVertexDesc getVertex(RoadGraph* roads, int index, bool onlyValidVertex = true);
+	static RoadVertexDesc getVertex(RoadGraph* roads, QVector2D pt, bool onlyValidVertex = true);
 	static bool getVertex(RoadGraph* roads, QVector2D pos, float threshold, RoadVertexDesc& desc, bool onlyValidVertex = true);
+	static bool getVertex(RoadGraph* roads, QVector2D pos, float threshold, RoadVertexDesc ignore, RoadVertexDesc& desc, bool onlyValidVertex = true);
 	static int getVertexIndex(RoadGraph* roads, RoadVertexDesc desc, bool onlyValidVertex = true);
 	static RoadVertexDesc addVertex(RoadGraph* roads, RoadVertex* v);
 	static void moveVertex(RoadGraph* roads, RoadVertexDesc v, QVector2D pt);
@@ -70,6 +72,7 @@ public:
 	// The entire graph related functions
 	static RoadGraph* copyRoads(RoadGraph* roads);
 	static void copyRoads(RoadGraph* roads1, RoadGraph* roads2);
+	static void mergeRoads(RoadGraph* roads1, RoadGraph* roads2);
 	static BBox getAABoundingBox(RoadGraph* roads);
 	static BBox getBoudingBox(RoadGraph* roads, float theta1, float theta2, float theta_step = 0.087f);
 	static RoadGraph* extractMajorRoad(RoadGraph* roads, bool remove = true);
@@ -79,8 +82,6 @@ public:
 	static std::vector<RoadVertexDesc> getNeighbors(RoadGraph* roads, RoadVertexDesc v, bool onlyValidVertex = true);
 	static bool isNeighbor(RoadGraph* roads, RoadVertexDesc v1, RoadVertexDesc v2);
 	static bool isConnected(RoadGraph* roads, RoadVertexDesc desc1, RoadVertexDesc desc2, bool onlyValidEdge = true);
-	static RoadVertexDesc findNearestVertex(RoadGraph* roads, const QVector2D &pt);
-	static RoadVertexDesc findNearestVertex(RoadGraph* roads, const QVector2D &pt, RoadVertexDesc ignore);
 	static RoadVertexDesc findConnectedNearestNeighbor(RoadGraph* roads, const QVector2D &pt, RoadVertexDesc v);
 	static bool getEdge(RoadGraph* roads, const QVector2D &pt, float threshold, RoadEdgeDesc& e, bool onlyValidEdge = true);
 	static RoadEdgeDesc findNearestEdge(RoadGraph* roads, RoadVertexDesc v, float& dist, QVector2D& closestPt, bool onlyValidEdge = true);

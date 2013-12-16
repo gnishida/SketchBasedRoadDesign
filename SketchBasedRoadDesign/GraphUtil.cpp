@@ -104,6 +104,28 @@ RoadVertexDesc GraphUtil::getVertex(RoadGraph* roads, int index, bool onlyValidV
 
 /**
  * Find the closest vertex from the specified point. 
+ */
+RoadVertexDesc GraphUtil::getVertex(RoadGraph* roads, QVector2D pt, bool onlyValidVertex) {
+	RoadVertexDesc nearest_desc;
+	float min_dist = std::numeric_limits<float>::max();
+
+	RoadVertexIter vi, vend;
+	for (boost::tie(vi, vend) = boost::vertices(roads->graph); vi != vend; ++vi) {
+		if (onlyValidVertex && !roads->graph[*vi]->valid) continue;
+
+		float dist = (roads->graph[*vi]->getPt() - pt).length();
+		if (dist < min_dist) {
+			nearest_desc = *vi;
+			min_dist = dist;
+		}
+	}
+
+	return nearest_desc;
+
+}
+
+/**
+ * Find the closest vertex from the specified point. 
  * If the closet vertex is within the threshold, return true. Otherwise, return false.
  */
 bool GraphUtil::getVertex(RoadGraph* roads, QVector2D pos, float threshold, RoadVertexDesc& desc, bool onlyValidVertex) {
@@ -123,6 +145,30 @@ bool GraphUtil::getVertex(RoadGraph* roads, QVector2D pos, float threshold, Road
 	if (min_dist <= threshold) return true;
 	else return false;
 }
+
+/**
+ * Find the closest vertex from the specified point. 
+ * If the closet vertex is within the threshold, return true. Otherwise, return false.
+ */
+bool GraphUtil::getVertex(RoadGraph* roads, QVector2D pos, float threshold, RoadVertexDesc ignore, RoadVertexDesc& desc, bool onlyValidVertex) {
+	float min_dist = std::numeric_limits<float>::max();
+
+	RoadVertexIter vi, vend;
+	for (boost::tie(vi, vend) = boost::vertices(roads->graph); vi != vend; ++vi) {
+		if (onlyValidVertex && !roads->graph[*vi]->valid) continue;
+		if (*vi == ignore) continue;
+
+		float dist = (roads->graph[*vi]->getPt() - pos).length();
+		if (dist < min_dist) {
+			min_dist = dist;
+			desc = *vi;
+		}
+	}
+
+	if (min_dist <= threshold) return true;
+	else return false;
+}
+
 
 /**
  * 当該頂点が、何番目の頂点かを返却する。
@@ -162,13 +208,13 @@ void GraphUtil::moveVertex(RoadGraph* roads, RoadVertexDesc v, QVector2D pt) {
 	for (boost::tie(ei, eend) = boost::out_edges(v, roads->graph); ei != eend; ++ei) {
 		RoadVertexDesc tgt = boost::target(*ei, roads->graph);
 
-		std::vector<QVector2D> polyLine = roads->graph[*ei]->getPolyLine();
+		std::vector<QVector2D> polyLine = roads->graph[*ei]->polyLine;
 		if ((polyLine[0] - roads->graph[v]->getPt()).lengthSquared() < (polyLine[0] - roads->graph[tgt]->getPt()).lengthSquared()) {
 			std::reverse(polyLine.begin(), polyLine.end());
 		}
 
 		int num = polyLine.size();
-		QVector2D dir = pt - roads->graph[v]->getPt();
+		QVector2D dir = pt - roads->graph[v]->pt;
 		for (int i = 0; i < num - 1; i++) {
 			polyLine[i] += dir * (float)i / (float)(num - 1);
 		}
@@ -259,6 +305,8 @@ void GraphUtil::removeIsolatedVertices(RoadGraph* roads, bool onlyValidVertex) {
  * Snap v1 to v2.
  */
 void GraphUtil::snapVertex(RoadGraph* roads, RoadVertexDesc v1, RoadVertexDesc v2) {
+	if (v1 == v2) return;
+
 	moveVertex(roads, v1, roads->graph[v2]->pt);
 
 	// Snap all the outing edges from v1
@@ -284,7 +332,7 @@ void GraphUtil::snapVertex(RoadGraph* roads, RoadVertexDesc v1, RoadVertexDesc v
  */
 RoadVertexDesc GraphUtil::getCentralVertex(RoadGraph* roads) {
 	BBox box = getAABoundingBox(roads);
-	return findNearestVertex(roads, box.midPt());
+	return getVertex(roads, box.midPt());
 }
 
 /**
@@ -740,6 +788,38 @@ void GraphUtil::copyRoads(RoadGraph* roads1, RoadGraph* roads2) {
 }
 
 /**
+ * Merge the 2nd road to the 1st road
+ */
+void GraphUtil::mergeRoads(RoadGraph* roads1, RoadGraph* roads2) {
+	QMap<RoadVertexDesc, RoadVertexDesc> conv;
+
+	// copy vertices from the 2nd road to the 1st road
+	RoadVertexIter vi, vend;
+	for (boost::tie(vi, vend) = boost::vertices(roads2->graph); vi != vend; ++vi) {
+		RoadVertex* v1 = new RoadVertex(*roads2->graph[*vi]);
+		RoadVertexDesc v1_desc = boost::add_vertex(roads1->graph);
+		roads1->graph[v1_desc] = v1;
+
+		conv[*vi] = v1_desc;
+	}
+
+	// copy edges from the 2nd road to the 1st road
+	RoadEdgeIter ei, eend;
+	for (boost::tie(ei, eend) = boost::edges(roads2->graph); ei != eend; ++ei) {
+		RoadVertexDesc src2 = boost::source(*ei, roads2->graph);
+		RoadVertexDesc tgt2 = boost::target(*ei, roads2->graph);
+
+		RoadVertexDesc src1 = conv[src2];
+		RoadVertexDesc tgt1 = conv[tgt2];
+
+		addEdge(roads1, src1, tgt1, roads2->graph[*ei]);
+	}
+
+	// make the result to be a planer graph
+	planarify(roads1);
+}
+
+/**
  * Return the axix aligned bounding box of the road graph.
  */
 BBox GraphUtil::getAABoundingBox(RoadGraph* roads) {
@@ -987,7 +1067,7 @@ bool GraphUtil::isConnected(RoadGraph* roads, RoadVertexDesc desc1, RoadVertexDe
 /**
  * Find the closest vertex from the specified point.
  */
-RoadVertexDesc GraphUtil::findNearestVertex(RoadGraph* roads, const QVector2D &pt) {
+/*RoadVertexDesc GraphUtil::findNearestVertex(RoadGraph* roads, const QVector2D &pt) {
 	RoadVertexDesc nearest_desc;
 	float min_dist = std::numeric_limits<float>::max();
 
@@ -1003,13 +1083,13 @@ RoadVertexDesc GraphUtil::findNearestVertex(RoadGraph* roads, const QVector2D &p
 	}
 
 	return nearest_desc;
-}
+}*/
 
 /**
  * Find the closest vertex from the specified point.
  * The vertex "ignore" is ignored.
  */
-RoadVertexDesc GraphUtil::findNearestVertex(RoadGraph* roads, const QVector2D &pt, RoadVertexDesc ignore) {
+/*RoadVertexDesc GraphUtil::findNearestVertex(RoadGraph* roads, const QVector2D &pt, RoadVertexDesc ignore) {
 	RoadVertexDesc nearest_desc;
 	float min_dist = std::numeric_limits<float>::max();
 
@@ -1026,7 +1106,7 @@ RoadVertexDesc GraphUtil::findNearestVertex(RoadGraph* roads, const QVector2D &p
 	}
 
 	return nearest_desc;
-}
+}*/
 
 /**
  * 指定したノードvと接続されたノードの中で、指定した座標に最も近いノードを返却する。
@@ -1070,7 +1150,7 @@ RoadVertexDesc GraphUtil::findConnectedNearestNeighbor(RoadGraph* roads, const Q
 }
 
 /**
- * Find the vertex which is the closest to the specified point.
+ * Find the edge which is the closest to the specified point.
  * If the distance is within the threshold, return true. Otherwise, return false.
  */
 bool GraphUtil::getEdge(RoadGraph* roads, const QVector2D &pt, float threshold, RoadEdgeDesc& e, bool onlyValidEdge) {
@@ -1253,8 +1333,10 @@ void GraphUtil::simplify(RoadGraph* roads, float dist_threshold) {
 		if (!roads->graph[*vi]->valid) continue;
 
 		while (true) {
-			RoadVertexDesc v2 = findNearestVertex(roads, roads->graph[*vi]->getPt(), *vi);
-			if ((roads->graph[v2]->getPt() - roads->graph[*vi]->getPt()).length() > dist_threshold) break;
+			//RoadVertexDesc v2 = findNearestVertex(roads, roads->graph[*vi]->getPt(), *vi);
+			RoadVertexDesc v2;
+			if (!getVertex(roads, roads->graph[*vi]->getPt(), dist_threshold, *vi, v2)) break;
+			//if ((roads->graph[v2]->getPt() - roads->graph[*vi]->getPt()).length() > dist_threshold) break;
 
 			QVector2D pt = (roads->graph[*vi]->pt + roads->graph[v2]->pt) / 2.0f;
 
@@ -2432,7 +2514,7 @@ void GraphUtil::findCorrespondenceByNearestNeighbor(RoadGraph* roads1, RoadGraph
 		for (boost::tie(vi, vend) = boost::vertices(roads1->graph); vi != vend; ++vi) {
 			if (!roads1->graph[*vi]->valid) continue;
 
-			RoadVertexDesc v2 = findNearestVertex(roads2, roads1->graph[*vi]->pt);
+			RoadVertexDesc v2 = getVertex(roads2, roads1->graph[*vi]->pt);
 			map1[*vi] = v2;
 			map2[v2] = *vi;
 		}
@@ -2443,7 +2525,7 @@ void GraphUtil::findCorrespondenceByNearestNeighbor(RoadGraph* roads1, RoadGraph
 
 			if (map2.contains(*vi)) continue;
 
-			RoadVertexDesc v1 = findNearestVertex(roads1, roads2->graph[*vi]->pt);
+			RoadVertexDesc v1 = getVertex(roads1, roads2->graph[*vi]->pt);
 			map2[*vi] = v1;
 		}
 	} else {
@@ -2452,7 +2534,7 @@ void GraphUtil::findCorrespondenceByNearestNeighbor(RoadGraph* roads1, RoadGraph
 		for (boost::tie(vi, vend) = boost::vertices(roads2->graph); vi != vend; ++vi) {
 			if (!roads2->graph[*vi]->valid) continue;
 
-			RoadVertexDesc v1 = findNearestVertex(roads1, roads2->graph[*vi]->pt);
+			RoadVertexDesc v1 = getVertex(roads1, roads2->graph[*vi]->pt);
 			map2[*vi] = v1;
 			map1[v1] = *vi;
 		}
@@ -2463,7 +2545,7 @@ void GraphUtil::findCorrespondenceByNearestNeighbor(RoadGraph* roads1, RoadGraph
 
 			if (map1.contains(*vi)) continue;
 
-			RoadVertexDesc v2 = findNearestVertex(roads2, roads1->graph[*vi]->pt);
+			RoadVertexDesc v2 = getVertex(roads2, roads1->graph[*vi]->pt);
 			map1[*vi] = v2;
 		}
 	}

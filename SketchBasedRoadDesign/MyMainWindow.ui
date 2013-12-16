@@ -28,7 +28,17 @@
      <string>Window</string>
     </property>
     <addaction name="actionControlWidget"/>
+    <addaction name="actionReferenceRoads"/>
    </widget>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionNew"/>
+    <addaction name="actionOpen"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <addaction name="menuFile"/>
    <addaction name="menuWindow"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -43,6 +53,26 @@
   <action name="actionControlWidget">
    <property name="text">
     <string>ControlWidget</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionReferenceRoads">
+   <property name="text">
+    <string>Reference Roads</string>
    </property>
   </action>
  </widget>
