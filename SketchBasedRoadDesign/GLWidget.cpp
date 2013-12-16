@@ -70,6 +70,10 @@ void GLWidget::drawScene() {
 			(camera->dz < MAX_Z / 2) ? true : false,
 			0.5f);
 		renderer->render(ref_roads->renderables);
+
+		// draw the bounding box
+		//BBox box = GraphUtil::getAABoundingBox(ref_roads);
+		
 	}
 }
 

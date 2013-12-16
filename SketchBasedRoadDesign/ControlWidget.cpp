@@ -91,16 +91,13 @@ void ControlWidget::zoom(int factor) {
 void ControlWidget::search() {
 	GraphUtil::planarify(mainWin->glWidget->sketch);
 
-	if (mainWin->glWidget->camera->dz < GLWidget::MAX_Z) {
-		for (int i = 0; i < mainWin->smallRoadBoxList->references.size(); i++) {
-			qDebug() << i;
-			mainWin->smallRoadBoxList->references[i]->view->showSimilarity(mainWin->glWidget->sketch, 3000, true);
-		}
-	} else {
-		for (int i = 0; i < mainWin->largeRoadBoxList->references.size(); i++) {
-			qDebug() << i;
-			mainWin->largeRoadBoxList->references[i]->view->showSimilarity(mainWin->glWidget->sketch, 3000, false);
-		}
+	for (int i = 0; i < mainWin->smallRoadBoxList->references.size(); i++) {
+		qDebug() << i;
+		mainWin->smallRoadBoxList->references[i]->view->showSimilarity(mainWin->glWidget->sketch, 3000, true);
+	}
+	for (int i = 0; i < mainWin->largeRoadBoxList->references.size(); i++) {
+		qDebug() << i;
+		mainWin->largeRoadBoxList->references[i]->view->showSimilarity(mainWin->glWidget->sketch, 3000, false);
 	}
 	
 	mainWin->glWidget->updateGL();

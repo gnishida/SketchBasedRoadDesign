@@ -81,7 +81,7 @@ float RoadView::showSimilarity(RoadGraph* roads2, float sketchCanvasSize, bool z
 	GraphUtil::findCorrespondence(r1, &tree1, r2, &tree2, false, 0.75f, map1, map2);
 
 	// Update the view based on the matching
-	updateView(r1);
+	updateView(r1, true);
 
 	// Compute the similarity
 	float similarity = GraphUtil::computeSimilarity(r1, map1, r2, map2, 1.0f, 5.0f);
@@ -113,7 +113,7 @@ void RoadView::updateView(RoadGraph* roads, bool showPairness) {
 	RoadEdgeIter ei, eend;
 	for (boost::tie(ei, eend) = boost::edges(roads->graph); ei != eend; ++ei) {
 		if (!roads->graph[*ei]->valid) continue;
-		if (roads->graph[*ei]->type != 2) continue;
+		//if (roads->graph[*ei]->type != 2) continue;
 
 		for (int i = 0; i < roads->graph[*ei]->polyLine.size() - 1; i++) {
 			QLineF line(roads->graph[*ei]->polyLine[i].x(), -roads->graph[*ei]->polyLine[i].y(), roads->graph[*ei]->polyLine[i+1].x(), -roads->graph[*ei]->polyLine[i+1].y());
